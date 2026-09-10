@@ -10,7 +10,7 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:int": "vitest run --config vitest.integration.config.ts",
+    "test:int": "vitest run --config vitest.integration.config.mts",
     "db:start": "prisma dev -n g4g -d -p 51213 -P 51214 --shadow-db-port 51215",
     "db:test:start": "prisma dev -n g4g-test -d -p 51223 -P 51224 --shadow-db-port 51225",
     "db:stop": "prisma dev stop g4g g4g-test",
