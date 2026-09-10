@@ -1,0 +1,589 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────── Auth & RBAC ───────────────────────────
+
+model AdminUser {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  passwordHash String
+  avatarId     String?
+  avatar       Upload?   @relation("AdminAvatar", fields: [avatarId], references: [id], onDelete: SetNull)
+  roleId       String
+  role         Role      @relation(fields: [roleId], references: [id])
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  sessions            Session[]
+  permissionOverrides UserPermissionOverride[]
+  invitesSent         Invite[]           @relation("InviteSender")
+  auditLogs           AuditLog[]
+  uploads             Upload[]           @relation("UploadedBy")
+  eventsCreated       Event[]            @relation("EventCreatedBy")
+  eventsUpdated       Event[]            @relation("EventUpdatedBy")
+  formsCreated        Form[]
+  formVersions        FormVersion[]
+  announcements       Announcement[]
+  homepagePublishes   HomepageRevision[]
+}
+
+model Session {
+  id         String    @id // SHA-256 of the cookie token
+  userId     String
+  user       AdminUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt  DateTime
+  createdAt  DateTime  @default(now())
+  lastSeenAt DateTime  @default(now())
+  ip         String?
+  userAgent  String?
+
+  @@index([userId])
+}
+
+model Invite {
+  id          String     @id @default(cuid())
+  email       String
+  tokenHash   String     @unique
+  roleId      String
+  role        Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  invitedById String?
+  invitedBy   AdminUser? @relation("InviteSender", fields: [invitedById], references: [id], onDelete: SetNull)
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  revokedAt   DateTime?
+  createdAt   DateTime   @default(now())
+
+  @@index([email])
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  description String   @default("")
+  isSystem    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       AdminUser[]
+  permissions RolePermission[]
+  invites     Invite[]
+}
+
+model Permission {
+  key         String @id
+  group       String
+  description String
+
+  roles     RolePermission[]
+  overrides UserPermissionOverride[]
+}
+
+model RolePermission {
+  roleId        String
+  role          Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permissionKey String
+  permission    Permission @relation(fields: [permissionKey], references: [key], onDelete: Cascade)
+
+  @@id([roleId, permissionKey])
+}
+
+enum OverrideEffect {
+  GRANT
+  DENY
+}
+
+model UserPermissionOverride {
+  userId        String
+  user          AdminUser      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permissionKey String
+  permission    Permission     @relation(fields: [permissionKey], references: [key], onDelete: Cascade)
+  effect        OverrideEffect
+
+  @@id([userId, permissionKey])
+}
+
+model AuditLog {
+  id          String     @id @default(cuid())
+  actorId     String?
+  actor       AdminUser? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  actorName   String
+  action      String
+  targetType  String
+  targetId    String?
+  targetLabel String     @default("")
+  metadata    Json       @default("{}")
+  ip          String?
+  userAgent   String?
+  createdAt   DateTime   @default(now())
+
+  @@index([createdAt])
+  @@index([actorId])
+  @@index([targetType, targetId])
+}
+
+// ─────────────────────────── Site ───────────────────────────
+
+model SiteSettings {
+  id             Int      @id @default(1)
+  clubName       String
+  shortName      String
+  tagline        String   @default("")
+  description    String   @default("")
+  universityName String   @default("")
+  logoId         String?
+  logo           Upload?  @relation("SiteLogo", fields: [logoId], references: [id], onDelete: SetNull)
+  email          String   @default("")
+  phone          String   @default("")
+  address        String   @default("")
+  mapUrl         String   @default("")
+  timezone       String   @default("Asia/Kolkata")
+  socials        Json     @default("{}")
+  footer         Json     @default("{}")
+  seo            Json     @default("{}")
+  navCtas        Json     @default("[]")
+  updatedAt      DateTime @updatedAt
+}
+
+enum PageKey {
+  HOME
+  ABOUT
+  EVENTS
+  TEAM
+  GALLERY
+  ANNOUNCEMENTS
+  SPONSORS
+  CONTACT
+}
+
+model PageSetting {
+  key            PageKey  @id
+  enabled        Boolean  @default(true)
+  showInNav      Boolean  @default(true)
+  navLabel       String
+  navOrder       Int      @default(0)
+  seoTitle       String?
+  seoDescription String?
+  content        Json     @default("{}")
+  updatedAt      DateTime @updatedAt
+}
+
+enum RevisionStatus {
+  DRAFT
+  PUBLISHED
+  SUPERSEDED
+}
+
+model HomepageRevision {
+  id            String         @id @default(cuid())
+  status        RevisionStatus
+  sections      Json           @default("[]")
+  publishedAt   DateTime?
+  publishedById String?
+  publishedBy   AdminUser?     @relation(fields: [publishedById], references: [id], onDelete: SetNull)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([status, publishedAt])
+}
+
+// ─────────────────────────── Media ───────────────────────────
+
+enum UploadKind {
+  IMAGE
+  FILE
+}
+
+enum UploadPurpose {
+  POSTER
+  GALLERY
+  TEAM
+  LOGO
+  SPONSOR
+  COVER
+  AVATAR
+  GENERIC
+  FORM_FILE
+}
+
+enum UploadVisibility {
+  PUBLIC
+  PRIVATE
+}
+
+model Upload {
+  id             String           @id @default(cuid())
+  kind           UploadKind
+  purpose        UploadPurpose
+  visibility     UploadVisibility @default(PUBLIC)
+  originalName   String
+  mimeType       String
+  sizeBytes      Int
+  width          Int?
+  height         Int?
+  storageKey     String           @unique
+  variants       Json             @default("[]")
+  blurDataUrl    String?
+  alt            String           @default("")
+  uploadedById   String?
+  uploadedBy     AdminUser?       @relation("UploadedBy", fields: [uploadedById], references: [id], onDelete: SetNull)
+  formResponseId String?
+  formResponse   FormResponse?    @relation(fields: [formResponseId], references: [id], onDelete: SetNull)
+  createdAt      DateTime         @default(now())
+
+  adminAvatars  AdminUser[]    @relation("AdminAvatar")
+  siteLogos     SiteSettings[] @relation("SiteLogo")
+  eventPosters  Event[]
+  sponsorLogos  Sponsor[]
+  formCovers    Form[]
+  teamPhotos    TeamMember[]
+  albumCovers   GalleryAlbum[] @relation("AlbumCover")
+  galleryImages GalleryImage[]
+
+  @@index([purpose, createdAt])
+}
+
+// ─────────────────────────── Events ───────────────────────────
+
+model EventCategory {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  events Event[]
+}
+
+enum EventMode {
+  OFFLINE
+  ONLINE
+  HYBRID
+}
+
+enum EventLifecycle {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+  ARCHIVED
+}
+
+enum RegistrationMode {
+  NONE
+  FORM
+  EXTERNAL
+}
+
+enum CountdownTarget {
+  START
+  DEADLINE
+}
+
+model Event {
+  id                      String           @id @default(cuid())
+  slug                    String           @unique
+  title                   String
+  tagline                 String           @default("")
+  description             String           @default("")
+  posterId                String?
+  poster                  Upload?          @relation(fields: [posterId], references: [id], onDelete: SetNull)
+  categoryId              String?
+  category                EventCategory?   @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  startAt                 DateTime
+  endAt                   DateTime
+  venue                   String           @default("")
+  mode                    EventMode        @default(OFFLINE)
+  onlineUrl               String?
+  registrationDeadline    DateTime?
+  maxParticipants         Int?
+  eligibility             String           @default("")
+  organizers              Json             @default("[]")
+  contacts                Json             @default("[]")
+  links                   Json             @default("[]")
+  lifecycle               EventLifecycle   @default(DRAFT)
+  publishedAt             DateTime?
+  registrationMode        RegistrationMode @default(NONE)
+  formId                  String?
+  form                    Form?            @relation(fields: [formId], references: [id], onDelete: SetNull)
+  externalRegistrationUrl String?
+  showCountdown           Boolean          @default(false)
+  countdownTarget         CountdownTarget  @default(START)
+  featured                Boolean          @default(false)
+  seoTitle                String?
+  seoDescription          String?
+  createdById             String?
+  createdBy               AdminUser?       @relation("EventCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedById             String?
+  updatedBy               AdminUser?       @relation("EventUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @updatedAt
+
+  sponsors  EventSponsor[]
+  responses FormResponse[]
+  albums    GalleryAlbum[]
+
+  @@index([lifecycle, startAt])
+}
+
+enum SponsorTier {
+  TITLE
+  POWERED_BY
+  COMMUNITY_PARTNER
+  TECHNOLOGY_PARTNER
+  PARTNER
+}
+
+model Sponsor {
+  id                 String      @id @default(cuid())
+  name               String
+  logoId             String?
+  logo               Upload?     @relation(fields: [logoId], references: [id], onDelete: SetNull)
+  website            String?
+  description        String      @default("")
+  tier               SponsorTier @default(PARTNER)
+  customLabel        String?
+  showOnSponsorsPage Boolean     @default(true)
+  isActive           Boolean     @default(true)
+  order              Int         @default(0)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  events EventSponsor[]
+}
+
+model EventSponsor {
+  eventId     String
+  event       Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  sponsorId   String
+  sponsor     Sponsor     @relation(fields: [sponsorId], references: [id], onDelete: Cascade)
+  type        SponsorTier
+  customLabel String?
+  order       Int         @default(0)
+
+  @@id([eventId, sponsorId])
+}
+
+// ─────────────────────────── Forms ───────────────────────────
+
+enum FormVisibility {
+  PUBLIC_LINK
+  EVENT_ONLY
+}
+
+model Form {
+  id                    String         @id @default(cuid())
+  slug                  String         @unique
+  name                  String
+  description           String         @default("")
+  coverId               String?
+  cover                 Upload?        @relation(fields: [coverId], references: [id], onDelete: SetNull)
+  visibility            FormVisibility @default(PUBLIC_LINK)
+  acceptingResponses    Boolean        @default(true)
+  opensAt               DateTime?
+  closesAt              DateTime?
+  maxResponses          Int?
+  oneResponsePerEmail   Boolean        @default(false)
+  successMessage        String         @default("Thanks! Your response has been recorded.")
+  submitLabel           String         @default("Submit")
+  reviewStep            Boolean        @default(true)
+  draftDefinition       Json
+  publishedVersionId    String?        @unique
+  publishedVersion      FormVersion?   @relation("PublishedVersion", fields: [publishedVersionId], references: [id], onDelete: SetNull)
+  hasUnpublishedChanges Boolean        @default(true)
+  createdById           String?
+  createdBy             AdminUser?     @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  versions   FormVersion[]   @relation("FormVersions")
+  responses  FormResponse[]
+  dailyStats FormDailyStat[]
+  events     Event[]
+}
+
+model FormVersion {
+  id          String     @id @default(cuid())
+  formId      String
+  form        Form       @relation("FormVersions", fields: [formId], references: [id], onDelete: Cascade)
+  version     Int
+  definition  Json
+  createdById String?
+  createdBy   AdminUser? @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime   @default(now())
+
+  publishedFor Form?          @relation("PublishedVersion")
+  responses    FormResponse[]
+
+  @@unique([formId, version])
+}
+
+model FormResponse {
+  id          String      @id @default(cuid())
+  formId      String
+  form        Form        @relation(fields: [formId], references: [id], onDelete: Cascade)
+  versionId   String
+  version     FormVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  eventId     String?
+  event       Event?      @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  data        Json
+  email       String?
+  searchText  String      @default("")
+  pagePath    Json        @default("[]")
+  ipHash      String?
+  userAgent   String?
+  submittedAt DateTime    @default(now())
+
+  files Upload[]
+
+  @@index([formId, submittedAt])
+  @@index([formId, email])
+}
+
+model FormDailyStat {
+  formId      String
+  form        Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
+  date        DateTime @db.Date
+  views       Int      @default(0)
+  starts      Int      @default(0)
+  submissions Int      @default(0)
+
+  @@id([formId, date])
+}
+
+// ─────────────────────────── Content ───────────────────────────
+
+enum PublishStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum AnnouncementPriority {
+  NORMAL
+  IMPORTANT
+  URGENT
+}
+
+model Announcement {
+  id             String               @id @default(cuid())
+  slug           String               @unique
+  title          String
+  summary        String               @default("")
+  content        String               @default("")
+  status         PublishStatus        @default(DRAFT)
+  publishAt      DateTime             @default(now())
+  expiresAt      DateTime?
+  linkUrl        String?
+  linkLabel      String?
+  priority       AnnouncementPriority @default(NORMAL)
+  pinned         Boolean              @default(false)
+  showOnHomepage Boolean              @default(false)
+  showAsBanner   Boolean              @default(false)
+  createdById    String?
+  createdBy      AdminUser?           @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  @@index([status, publishAt])
+}
+
+model TeamTerm {
+  id          String   @id @default(cuid())
+  label       String
+  startYear   Int      @unique
+  isCurrent   Boolean  @default(false)
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members TeamMember[]
+}
+
+model Domain {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String   @default("")
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members TeamMember[]
+}
+
+enum TeamTier {
+  FACULTY
+  LEAD
+  CORE
+  DOMAIN_LEAD
+  MEMBER
+}
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  termId    String
+  term      TeamTerm @relation(fields: [termId], references: [id], onDelete: Cascade)
+  name      String
+  photoId   String?
+  photo     Upload?  @relation(fields: [photoId], references: [id], onDelete: SetNull)
+  title     String
+  tier      TeamTier @default(MEMBER)
+  domainId  String?
+  domain    Domain?  @relation(fields: [domainId], references: [id], onDelete: SetNull)
+  bio       String   @default("")
+  links     Json     @default("{}")
+  featured  Boolean  @default(false)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([termId, tier, order])
+}
+
+model GalleryAlbum {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  title       String
+  description String    @default("")
+  date        DateTime?
+  coverId     String?
+  cover       Upload?   @relation("AlbumCover", fields: [coverId], references: [id], onDelete: SetNull)
+  eventId     String?
+  event       Event?    @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  isPublished Boolean   @default(false)
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  images GalleryImage[]
+}
+
+model GalleryImage {
+  id        String       @id @default(cuid())
+  albumId   String
+  album     GalleryAlbum @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  uploadId  String
+  upload    Upload       @relation(fields: [uploadId], references: [id], onDelete: Cascade)
+  caption   String       @default("")
+  order     Int          @default(0)
+  createdAt DateTime     @default(now())
+
+  @@index([albumId, order])
+}
+
+model DailyPageView {
+  date  DateTime @db.Date
+  path  String
+  views Int      @default(0)
+
+  @@id([date, path])
+}
