@@ -22,7 +22,10 @@ CMS shape, form engine, visual system, and build order.
 | Auth | Hand-rolled: DB sessions + argon2id, invite-only admin accounts, super admin bootstrapped from env |
 | Identity | Seeded as generic "GeeksforGeeks Student Chapter" / "Your University"; everything editable |
 | Timezone | Site setting, default `Asia/Kolkata`. All timestamps stored UTC |
-| UI kit (admin) | shadcn/ui (Radix primitives) restyled with project tokens; dnd-kit for ordering; Tiptap for rich text; react-easy-crop for cropping |
+| UI kit (admin) | Hand-rolled Tailwind primitives + Radix primitives for complex widgets (dialog, dropdown, select, switch, tabs, popover), shadcn-style; dnd-kit for ordering; Tiptap for rich text; react-easy-crop for cropping |
+| Versions | next 16.3.4, react 19.3, tailwindcss 4.3, zod 4, motion 13. **prisma / @prisma/client / @prisma/adapter-pg pinned to exactly 7.10.0** — the prisma CLI's npm `latest` tag points at an 8.0 RC; never install unpinned |
+| Prisma config | `prisma.config.ts` loads `dotenv/config` and uses `process.env.DATABASE_URL ?? ""` (Prisma's `env()` helper throws on every CLI call, including `prisma dev ls/stop`, when the variable is missing) |
+| Package manager | npm |
 
 ## 2. Visual system (approved)
 
@@ -69,7 +72,7 @@ Single Next.js monolith.
 
 ## 4. Auth, sessions, RBAC
 
-**Sessions**: 32-byte random token in an httpOnly, `SameSite=Lax`, `Secure` (prod) cookie; DB stores SHA-256 of the token. 7-day lifetime, refreshed when older than 1 day. Logout and "sign out all sessions" delete rows. Deactivating an admin deletes their sessions.
+**Sessions**: 32-byte random token in an httpOnly, `SameSite=Lax` cookie named `__Host-gfg_session` in production (Secure) and `gfg_session` in development (the `__Host-` prefix requires Secure, which breaks on plain-HTTP localhost). DB stores SHA-256 of the token. Validity: 7 days idle, 30 days absolute; `lastSeenAt`/`expiresAt` touched at most once per day. The DB row is the authority, so the cookie simply has a 30-day max-age and is never rewritten on refresh. Logout and "sign out all sessions" delete rows. Deactivating an admin deletes their sessions.
 
 **Passwords**: argon2id (`@node-rs/argon2`), min 12 chars. Login rate limit: 5 attempts / 15 min per IP+email, generic error message.
 
@@ -261,7 +264,7 @@ One cached `getPageSettings()` feeds: navigation (enabled ∧ showInNav, ordered
 ## 11. Security checklist
 
 - Server-side RBAC on every action, admin page and admin route handler.
-- Zod validation of every input; rich text sanitized with `sanitize-html` allowlist on write (links restricted to http/https/mailto, `rel="noopener noreferrer"` added).
+- Zod validation of every input; rich text sanitized with `sanitize-html` allowlist **on write and again on render** (render-time is the backstop for values stored before an allowlist change; links restricted to http/https/mailto, `rel="noopener noreferrer"` added).
 - React escaping everywhere else; no `dangerouslySetInnerHTML` except sanitized rich text.
 - Server Actions' built-in origin check; route handlers verify `Origin` for mutating requests; cookies `SameSite=Lax`, httpOnly, Secure in production.
 - Rate limits: login, invite accept, public form submit/upload, beacons.
@@ -280,7 +283,8 @@ One cached `getPageSettings()` feeds: navigation (enabled ∧ showInNav, ordered
 ## 13. Testing
 
 - Vitest unit tests (TDD) for: form engine (`evaluateForm`, `validateDefinition`, `validateSubmission`), effective permissions, event status derivation, announcement visibility, CSV escaping, slug generation, variant spec math.
-- Integration tests against a test database for: `requirePermission` in actions, registration capacity under concurrent submissions, session lifecycle.
+- Integration tests against a test database (a second `prisma dev` server, `g4g-test`) for: `requirePermission` in actions, session lifecycle, registration capacity.
+- **Capacity race caveat**: `prisma dev` is single-connection, so concurrent transactions serialize regardless of `FOR UPDATE`; a green run there proves the SQL and count logic only. The capacity race test must also be run against a real multi-connection PostgreSQL server before Phase 3 is signed off.
 - Playwright smoke tests: login, create + publish event, register through a multi-page branched form, export responses.
 - Manual browser verification of each phase's UI.
 
@@ -306,7 +310,9 @@ Cards backed by real queries: upcoming events (next 5), active registrations (op
 
 Each phase ships features complete and verified. SEO metadata, a11y, reduced motion and lazy images are acceptance criteria within each phase, not deferred.
 
-1. **Foundation** — project scaffold, verify `prisma dev` parity (migration + `FOR UPDATE` + `ILIKE`), full Prisma schema, seed (idempotent), auth (login/logout/invite/account), RBAC resolver + guards, audit log helper + viewer, admin users/roles/permission matrix UI, site settings, page toggles + navigation, media pipeline + `/media` route, design tokens + UI kit, public shell (nav, footer, announcement banner slot), admin shell + dashboard skeleton with real data.
+1. **Foundation**, split into two plans:
+   - **1a — Data & access**: scaffold, Prisma config + full schema + migration, idempotent seed, RBAC resolver (TDD, first), password/token primitives, rate limiter, action/audit helpers, sessions + guards (integration-tested), login/logout, account page, security headers, brand tokens, admin shell. Deliverable: sign in as super admin, manage own account, nothing else exists. (`prisma dev` parity already verified by spike on 2026-09-10: migrate, `FOR UPDATE`, `ILIKE`, JSON path filters, `date_trunc`.)
+   - **1b — Chrome & media**: UI kit, media pipeline + `/media` route + upload handler, site settings, page toggles + navigation, public shell (nav, footer, banner slot), invites + users/roles/permission-matrix UI, audit viewer, dashboard with real queries.
 2. **Events** — categories, CRUD, duplicate, lifecycle actions, poster crop/upload pipeline, sponsors (global + per event), public list (filters: upcoming/past/category) + detail (countdown, sponsors, organizers, links, share, JSON-LD, OG), QR dialog.
 3. **Forms & registration** — engine (TDD), builder (pages, blocks, logic editor, branching, preview), publish/versioning, public wizard renderer, submit/upload routes, capacity/deadline rules, event registration wiring (form / external URL / none), responses table, filters, detail, delete, CSV/XLSX export, analytics, QR for forms.
 4. **Homepage CMS & static pages** — all section types, editor with sortable sections + preview + publish + history, About and Contact page editors.
