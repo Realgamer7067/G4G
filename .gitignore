@@ -1,11 +1,35 @@
+# dependencies
 node_modules/
+.pnp
+.pnp.*
+
+# next.js / build
 .next/
+out/
+build/
+next-env.d.ts
+*.tsbuildinfo
+
+# generated
+src/generated/
+
+# env files (only the example is committed)
 .env
 .env.*
 !.env.example
+
+# runtime data (uploads)
 data/
-*.log
+
+# testing
 coverage/
 playwright-report/
 test-results/
+
+# misc
+.DS_Store
+*.pem
+*.log
+npm-debug.log*
 .prisma-dev/
+.vercel
