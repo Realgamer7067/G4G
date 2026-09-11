@@ -71,18 +71,20 @@ export const getSession = cache(async (): Promise<SessionUser | null> => {
   return token ? loadSessionByToken(token) : null;
 });
 
+const COOKIE_ATTRIBUTES = {
+  httpOnly: true,
+  sameSite: "lax",
+  secure: process.env.NODE_ENV === "production",
+  path: "/",
+} as const;
+
 export async function setSessionCookie(token: string): Promise<void> {
-  (await cookies()).set(SESSION_COOKIE, token, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: SESSION_ABSOLUTE_MS / 1000,
-  });
+  (await cookies()).set(SESSION_COOKIE, token, { ...COOKIE_ATTRIBUTES, maxAge: SESSION_ABSOLUTE_MS / 1000 });
 }
 
+/** Expire with the same attributes: browsers ignore a `__Host-` cookie update that lacks `Secure` and `Path=/`. */
 export async function clearSessionCookie(): Promise<void> {
-  (await cookies()).delete(SESSION_COOKIE);
+  (await cookies()).set(SESSION_COOKIE, "", { ...COOKIE_ATTRIBUTES, maxAge: 0 });
 }
 
 export async function destroySession(sessionId: string): Promise<void> {
