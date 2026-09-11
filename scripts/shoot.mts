@@ -30,7 +30,8 @@ const browser = await chromium.launch({ executablePath: process.env.CHROME ?? "/
 for (const target of targets) {
   const [path, size = "1440x900"] = target.split("@");
   const [width, height] = size.split("x").map(Number);
-  const context = await browser.newContext({ viewport: { width, height } });
+  // REDUCED=1 emulates prefers-reduced-motion, so scroll-driven reveals don't hide content in full-page captures.
+  const context = await browser.newContext({ viewport: { width, height }, reducedMotion: process.env.REDUCED === "1" ? "reduce" : "no-preference" });
   if (token) await context.addCookies([{ name: "gfg_session", value: token, url: base, httpOnly: true, sameSite: "Lax" }]);
   const page = await context.newPage();
   const errors: string[] = [];
