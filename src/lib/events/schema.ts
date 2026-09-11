@@ -4,8 +4,7 @@ import { isHttpUrl } from "@/lib/settings/schema";
 import { isLocalDateTime } from "@/lib/utils/timezone";
 
 export const EVENT_MODES = ["OFFLINE", "ONLINE", "HYBRID"] as const;
-/** FORM is added once the form engine lands (phase 3). */
-export const REGISTRATION_MODES = ["NONE", "EXTERNAL"] as const;
+export const REGISTRATION_MODES = ["NONE", "EXTERNAL", "FORM"] as const;
 export const SPONSOR_TIERS = ["TITLE", "POWERED_BY", "COMMUNITY_PARTNER", "TECHNOLOGY_PARTNER", "PARTNER"] as const;
 
 export const SPONSOR_TIER_LABELS: Record<(typeof SPONSOR_TIERS)[number], string> = {
@@ -57,6 +56,7 @@ export const eventFormSchema = z
     onlineUrl: optionalUrl,
     registrationMode: z.enum(REGISTRATION_MODES).default("NONE"),
     externalRegistrationUrl: optionalUrl,
+    formId: nullableId,
     registrationDeadline: z
       .string()
       .trim()
@@ -102,6 +102,9 @@ export const eventFormSchema = z
     if (v.endAt <= v.startAt) ctx.addIssue({ code: "custom", path: ["endAt"], message: "The event must end after it starts." });
     if (v.registrationMode === "EXTERNAL" && !v.externalRegistrationUrl) {
       ctx.addIssue({ code: "custom", path: ["externalRegistrationUrl"], message: "Add the registration link." });
+    }
+    if (v.registrationMode === "FORM" && !v.formId) {
+      ctx.addIssue({ code: "custom", path: ["formId"], message: "Pick the registration form." });
     }
     if (v.registrationDeadline && v.registrationDeadline > v.endAt) {
       ctx.addIssue({ code: "custom", path: ["registrationDeadline"], message: "Registration must close before the event ends." });

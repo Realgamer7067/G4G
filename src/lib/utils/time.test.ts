@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { timeAgo } from "./time";
+import { daysAgo, timeAgo } from "./time";
 
 const now = new Date("2026-09-10T12:00:00Z");
 
@@ -14,5 +14,12 @@ describe("timeAgo", () => {
   });
   it("handles future dates", () => {
     expect(timeAgo(new Date("2026-09-10T15:00:00Z"), now)).toBe("in 3 hours");
+  });
+});
+
+describe("daysAgo", () => {
+  it("subtracts whole days from the given instant", () => {
+    expect(daysAgo(30, now).toISOString()).toBe("2026-08-11T12:00:00.000Z");
+    expect(daysAgo(0, now).toISOString()).toBe(now.toISOString());
   });
 });

@@ -30,10 +30,11 @@ export default async function EditEventPage({ params, searchParams }: PageProps<
   });
   if (!event) notFound();
 
-  const [{ timezone }, categories, sponsors] = await Promise.all([
+  const [{ timezone }, categories, sponsors, forms] = await Promise.all([
     loadSiteSettings(),
     db.eventCategory.findMany({ orderBy: { order: "asc" }, select: { id: true, name: true } }),
     db.sponsor.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, isActive: true } }),
+    db.form.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, publishedVersionId: true } }),
   ]);
   const poster = toPublicImage(event.poster);
   const base = (process.env.SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
@@ -41,6 +42,9 @@ export default async function EditEventPage({ params, searchParams }: PageProps<
   const qrTargets: QrTarget[] = [{ key: "page", label: "Event page", target: `event:${event.id}`, url: `${base}/events/${event.slug}` }];
   if (event.registrationMode === "EXTERNAL" && event.externalRegistrationUrl) {
     qrTargets.push({ key: "register", label: "Registration", target: `register:${event.id}`, url: event.externalRegistrationUrl });
+  }
+  if (event.registrationMode === "FORM" && event.formId) {
+    qrTargets.push({ key: "register", label: "Registration", target: `register:${event.id}`, url: `${base}/events/${event.slug}/register` });
   }
 
   return (
@@ -75,6 +79,7 @@ export default async function EditEventPage({ params, searchParams }: PageProps<
           <EventEditor
             timezone={timezone}
             categories={categories}
+            forms={forms.map((f) => ({ id: f.id, name: f.name, published: f.publishedVersionId !== null }))}
             sponsors={sponsors.filter((s) => s.isActive || event.sponsors.some((x) => x.sponsorId === s.id))}
             values={{
               id: event.id,
@@ -89,7 +94,8 @@ export default async function EditEventPage({ params, searchParams }: PageProps<
               venue: event.venue,
               mode: event.mode,
               onlineUrl: event.onlineUrl ?? "",
-              registrationMode: event.registrationMode === "EXTERNAL" ? "EXTERNAL" : "NONE",
+              registrationMode: event.registrationMode,
+              formId: event.formId,
               externalRegistrationUrl: event.externalRegistrationUrl ?? "",
               registrationDeadline: event.registrationDeadline ? utcToZonedInput(event.registrationDeadline, timezone) : "",
               maxParticipants: event.maxParticipants?.toString() ?? "",

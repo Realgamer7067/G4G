@@ -3,10 +3,10 @@ node_modules/
 .pnp
 .pnp.*
 
-# next.js / build
+# next.js / build — anchored so nested route folders named "build" (e.g. admin/forms/[id]/build) aren't ignored
 .next/
 out/
-build/
+/build/
 next-env.d.ts
 *.tsbuildinfo
 

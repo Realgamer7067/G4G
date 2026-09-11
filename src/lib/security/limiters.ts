@@ -11,3 +11,9 @@ export const loginIpLimiter = createRateLimiter({ limit: 30, windowMs: FIFTEEN_M
 export const inviteLimiter = createRateLimiter({ limit: 10, windowMs: FIFTEEN_MINUTES });
 /** Per admin: 60 image uploads per minute. */
 export const uploadLimiter = createRateLimiter({ limit: 60, windowMs: 60_000 });
+/** Per IP: 10 form submissions per minute. */
+export const formSubmitLimiter = createRateLimiter({ limit: 10, windowMs: 60_000 });
+/** Per IP: 20 form file uploads per minute. */
+export const formUploadLimiter = createRateLimiter({ limit: 20, windowMs: 60_000 });
+/** Per IP: 60 analytics beacons per minute. */
+export const beaconLimiter = createRateLimiter({ limit: 60, windowMs: 60_000 });

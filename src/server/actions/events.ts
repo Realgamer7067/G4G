@@ -76,6 +76,7 @@ export async function saveEventAction(
       onlineUrl: input.onlineUrl,
       registrationMode: input.registrationMode,
       externalRegistrationUrl: input.registrationMode === "EXTERNAL" ? input.externalRegistrationUrl : null,
+      formId: input.registrationMode === "FORM" ? input.formId : null,
       registrationDeadline: input.registrationDeadline ? zonedToUtc(input.registrationDeadline, timezone) : null,
       maxParticipants: input.maxParticipants,
       eligibility: input.eligibility,
@@ -96,6 +97,9 @@ export async function saveEventAction(
       await ensureImages(tx, [input.posterId]);
       if (input.categoryId && !(await tx.eventCategory.findUnique({ where: { id: input.categoryId } }))) {
         throw new UserError("That category was removed. Pick another.", { categoryId: ["That category was removed. Pick another."] });
+      }
+      if (input.registrationMode === "FORM" && input.formId && !(await tx.form.findUnique({ where: { id: input.formId }, select: { id: true } }))) {
+        throw new UserError("That form was deleted. Pick another.", { formId: ["That form was deleted. Pick another."] });
       }
       if (sponsors.length && (await tx.sponsor.count({ where: { id: { in: sponsors.map((s) => s.sponsorId) } } })) !== sponsors.length) {
         throw new UserError("One of the sponsors was removed. Pick it again.");

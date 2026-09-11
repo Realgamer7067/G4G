@@ -41,8 +41,10 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
 
   const now = new Date();
   const input = statusInputOf(event);
-  const status = deriveEventStatus(input, statsOf(event), now);
-  const registration = registrationState(input, statsOf(event), now);
+  const status = deriveEventStatus(input, statsOf(event, now), now);
+  const registration = registrationState(input, statsOf(event, now), now);
+  const registerHref =
+    event.registrationMode === "FORM" ? `/events/${event.slug}/register` : event.registrationMode === "EXTERNAL" ? event.externalRegistrationUrl : null;
   const when = formatEventWhen(event.startAt, event.endAt, site.timezone);
   const url = absoluteUrl(`/events/${event.slug}`);
   const countdownTarget = event.countdownTarget === "DEADLINE" && event.registrationDeadline ? event.registrationDeadline : event.startAt;
@@ -75,8 +77,8 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
           image: event.poster ? [absoluteUrl(ogImage(event.poster).url)] : undefined,
           url,
           organizer: { "@type": "Organization", name: site.clubName, url: absoluteUrl("/") },
-          ...(registration.reason !== "not_required" && event.externalRegistrationUrl
-            ? { offers: { "@type": "Offer", url: event.externalRegistrationUrl, price: 0, priceCurrency: "INR", availability: registration.open ? "https://schema.org/InStock" : "https://schema.org/SoldOut" } }
+          ...(registration.reason !== "not_required" && registerHref
+            ? { offers: { "@type": "Offer", url: absoluteUrl(registerHref), price: 0, priceCurrency: "INR", availability: registration.open ? "https://schema.org/InStock" : "https://schema.org/SoldOut" } }
             : {}),
         }}
       />
@@ -131,15 +133,23 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
             {showCountdown && <Countdown target={countdownTarget} label={event.countdownTarget === "DEADLINE" && event.registrationDeadline ? "Registration closes in" : "Starts in"} />}
 
             <div className="flex flex-wrap items-center gap-3 pt-1">
-              {registration.open && event.registrationMode === "EXTERNAL" && event.externalRegistrationUrl && (
+              {registration.open && registerHref && event.registrationMode === "EXTERNAL" && (
                 <a
-                  href={event.externalRegistrationUrl}
+                  href={registerHref}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex h-12 items-center gap-2 rounded-full bg-leaf px-6 font-semibold text-night shadow-[0_14px_40px_-14px_rgb(92_201_123/0.8)] transition-transform hover:-translate-y-0.5"
                 >
                   Register now <ArrowUpRight className="size-4" aria-hidden="true" />
                 </a>
+              )}
+              {registration.open && registerHref && event.registrationMode === "FORM" && (
+                <Link
+                  href={registerHref}
+                  className="inline-flex h-12 items-center gap-2 rounded-full bg-gradient-to-r from-leaf to-mint px-6 font-semibold text-night shadow-[0_14px_40px_-14px_rgb(92_201_123/0.8)] transition-transform hover:-translate-y-0.5"
+                >
+                  Join event <ArrowUpRight className="size-4" aria-hidden="true" />
+                </Link>
               )}
               {event.lifecycle === "PUBLISHED" && new Date(event.endAt) > now && (
                 <a href={`/events/${event.slug}/calendar.ics`} className="inline-flex h-12 items-center gap-2 rounded-full border border-line px-5 text-sm hover:border-leaf/40">

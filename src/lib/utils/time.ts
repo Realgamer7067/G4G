@@ -18,3 +18,8 @@ export function timeAgo(date: Date, now: Date = new Date()): string {
   }
   return rtf.format(Math.sign(seconds), "minute");
 }
+
+/** `now - days` as a Date. Callers pass their own `now` so this stays a pure function of its inputs. */
+export function daysAgo(days: number, now: Date): Date {
+  return new Date(now.getTime() - days * 86_400_000);
+}

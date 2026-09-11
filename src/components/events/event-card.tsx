@@ -12,7 +12,7 @@ import { StatusPill } from "./status-pill";
 export function EventCard({ event, timezone, now, priority = false }: { event: EventCardDTO; timezone: string; now: Date; priority?: boolean }) {
   const when = formatEventWhen(event.startAt, event.endAt, timezone);
   const badge = dateBadge(event.startAt, timezone);
-  const status = deriveEventStatus(statusInputOf(event), statsOf(event), now);
+  const status = deriveEventStatus(statusInputOf(event), statsOf(event, now), now);
   const place = event.mode === "ONLINE" ? "Online" : event.mode === "HYBRID" ? `${event.venue || "On campus"} + online` : event.venue;
 
   return (

@@ -27,9 +27,10 @@ export type EventCardDTO = {
   category: { name: string; slug: string } | null;
   poster: PublicImage | null;
   headlineSponsor: EventSponsorDTO | null;
-  /** Registrations so far (FORM mode; wired up with the form engine). */
+  /** Registrations so far (FORM mode). */
   registrationCount: number;
-  formAccepting: boolean;
+  /** The linked registration form (FORM mode), with the raw window so "open" is computed at render time. */
+  form: { slug: string; published: boolean; accepting: boolean; opensAt: string | null; closesAt: string | null; maxResponses: number | null } | null;
 };
 
 export type EventDetailDTO = EventCardDTO & {
@@ -56,6 +57,8 @@ const include = {
     orderBy: { order: "asc" as const },
     include: { sponsor: { include: { logo: { select: publicImageSelect } } } },
   },
+  form: { select: { slug: true, publishedVersionId: true, acceptingResponses: true, opensAt: true, closesAt: true, maxResponses: true } },
+  _count: { select: { responses: true } },
 };
 
 type EventRow = NonNullable<Awaited<ReturnType<typeof findEvent>>>;
@@ -94,8 +97,17 @@ function toCard(row: EventRow): EventCardDTO {
     category: row.category,
     poster: toPublicImage(row.poster),
     headlineSponsor: sponsors.find((s) => s.type === "TITLE") ?? sponsors.find((s) => s.type === "POWERED_BY") ?? null,
-    registrationCount: 0,
-    formAccepting: false,
+    registrationCount: row._count.responses,
+    form: row.form
+      ? {
+          slug: row.form.slug,
+          published: row.form.publishedVersionId !== null,
+          accepting: row.form.acceptingResponses,
+          opensAt: row.form.opensAt?.toISOString() ?? null,
+          closesAt: row.form.closesAt?.toISOString() ?? null,
+          maxResponses: row.form.maxResponses,
+        }
+      : null,
   };
 }
 
@@ -144,6 +156,16 @@ export function statusInputOf(e: EventCardDTO): StatusInput {
   };
 }
 
-export function statsOf(e: EventCardDTO) {
-  return e.registrationMode === "FORM" ? { count: e.registrationCount, formAccepting: e.formAccepting } : null;
+/** Registration stats for FORM events, evaluated at `now` (the cache may be older than the form's window). */
+export function statsOf(e: Pick<EventCardDTO, "registrationMode" | "registrationCount" | "form">, now: Date = new Date()) {
+  if (e.registrationMode !== "FORM") return null;
+  const f = e.form;
+  const accepting =
+    !!f &&
+    f.published &&
+    f.accepting &&
+    (!f.opensAt || new Date(f.opensAt) <= now) &&
+    (!f.closesAt || new Date(f.closesAt) > now) &&
+    (f.maxResponses === null || e.registrationCount < f.maxResponses);
+  return { count: e.registrationCount, formAccepting: accepting };
 }

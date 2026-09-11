@@ -37,8 +37,9 @@ export type EventEditorValues = {
   venue: string;
   mode: Mode;
   onlineUrl: string;
-  registrationMode: "NONE" | "EXTERNAL";
+  registrationMode: "NONE" | "EXTERNAL" | "FORM";
   externalRegistrationUrl: string;
+  formId: string | null;
   registrationDeadline: string;
   maxParticipants: string;
   eligibility: string;
@@ -57,11 +58,13 @@ export function EventEditor({
   values,
   categories,
   sponsors,
+  forms,
   timezone,
 }: {
   values: EventEditorValues;
   categories: { id: string; name: string }[];
   sponsors: { id: string; name: string }[];
+  forms: { id: string; name: string; published: boolean }[];
   timezone: string;
 }) {
   const { state, pending, onSubmit } = useFormAction(saveEventAction);
@@ -173,6 +176,7 @@ export function EventEditor({
           <legend className="sr-only">How do people register?</legend>
           {[
             { value: "NONE", title: "No registration", body: "People just turn up. No Register button is shown." },
+            { value: "FORM", title: "Registration form on this site", body: "People press “Join event” and fill in a step-by-step form you built in Forms." },
             { value: "EXTERNAL", title: "External link", body: "Send people to a registration page elsewhere, like Unstop, Devfolio or a Google Form." },
           ].map((o) => (
             <label key={o.value} className="flex cursor-pointer gap-3 rounded-xl border border-line bg-night/50 p-3 has-[:checked]:border-leaf/50 has-[:checked]:bg-leaf/5 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-mint">
@@ -191,15 +195,47 @@ export function EventEditor({
             </label>
           ))}
         </fieldset>
-        {registration === "EXTERNAL" && (
+        {registration !== "NONE" && (
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Registration link" htmlFor="externalRegistrationUrl" error={err("externalRegistrationUrl")} className="sm:col-span-2">
-              <Input id="externalRegistrationUrl" name="externalRegistrationUrl" type="url" defaultValue={values.externalRegistrationUrl} placeholder="https://…" {...describedBy("externalRegistrationUrl", err("externalRegistrationUrl"))} />
-            </Field>
+            {registration === "EXTERNAL" ? (
+              <Field label="Registration link" htmlFor="externalRegistrationUrl" error={err("externalRegistrationUrl")} className="sm:col-span-2">
+                <Input id="externalRegistrationUrl" name="externalRegistrationUrl" type="url" defaultValue={values.externalRegistrationUrl} placeholder="https://…" {...describedBy("externalRegistrationUrl", err("externalRegistrationUrl"))} />
+              </Field>
+            ) : (
+              <Field
+                label="Registration form"
+                htmlFor="formId"
+                error={err("formId")}
+                className="sm:col-span-2"
+                hint={
+                  <>
+                    Only published forms accept registrations. Tip: set the form to “Event only” so it isn&apos;t reachable on its own.{" "}
+                    <Link href="/admin/forms/new" className="text-leaf hover:underline">
+                      Create a form
+                    </Link>
+                  </>
+                }
+              >
+                <Select id="formId" name="formId" defaultValue={values.formId ?? ""} {...describedBy("formId", err("formId"))}>
+                  <option value="">Choose a form</option>
+                  {forms.map((f) => (
+                    <option key={f.id} value={f.id}>
+                      {f.name}
+                      {f.published ? "" : " (not published yet)"}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+            )}
             <Field label="Registration closes" htmlFor="registrationDeadline" error={err("registrationDeadline")} hint="Leave empty to close when the event starts.">
               <Input id="registrationDeadline" name="registrationDeadline" type="datetime-local" defaultValue={values.registrationDeadline} />
             </Field>
-            <Field label="Seats" htmlFor="maxParticipants" error={err("maxParticipants")} hint="Optional. Shown on the event page.">
+            <Field
+              label="Seats"
+              htmlFor="maxParticipants"
+              error={err("maxParticipants")}
+              hint={registration === "FORM" ? "Registration closes automatically when this many people have registered." : "Optional. Shown on the event page."}
+            >
               <Input id="maxParticipants" name="maxParticipants" type="number" min={1} inputMode="numeric" defaultValue={values.maxParticipants} />
             </Field>
           </div>

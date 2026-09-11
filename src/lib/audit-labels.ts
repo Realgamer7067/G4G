@@ -36,6 +36,13 @@ const LABELS: Record<string, string> = {
   "category.created": "Added an event category",
   "category.updated": "Renamed an event category",
   "category.deleted": "Deleted an event category",
+  "form.created": "Created a form",
+  "form.published": "Published a form",
+  "form.settings_updated": "Changed form settings",
+  "form.duplicated": "Duplicated a form",
+  "form.deleted": "Deleted a form",
+  "form.responses_deleted": "Deleted form responses",
+  "form.responses_exported": "Exported form responses",
 };
 
 export const AUDIT_ACTION_FAMILIES: { value: string; label: string }[] = [
@@ -49,6 +56,7 @@ export const AUDIT_ACTION_FAMILIES: { value: string; label: string }[] = [
   { value: "event", label: "Events" },
   { value: "sponsor", label: "Sponsors" },
   { value: "category", label: "Event categories" },
+  { value: "form", label: "Forms" },
 ];
 
 export function registerAuditLabels(labels: Record<string, string>, families: { value: string; label: string }[] = []): void {

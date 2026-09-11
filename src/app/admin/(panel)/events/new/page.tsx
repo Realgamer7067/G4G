@@ -11,10 +11,11 @@ export const metadata: Metadata = { title: "New event" };
 
 export default async function NewEventPage() {
   await requirePagePermission("events.create");
-  const [{ timezone }, categories, sponsors] = await Promise.all([
+  const [{ timezone }, categories, sponsors, forms] = await Promise.all([
     loadSiteSettings(),
     db.eventCategory.findMany({ orderBy: { order: "asc" }, select: { id: true, name: true } }),
     db.sponsor.findMany({ where: { isActive: true }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    db.form.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, publishedVersionId: true } }),
   ]);
   return (
     <div className="grid max-w-4xl gap-8">
@@ -26,6 +27,7 @@ export default async function NewEventPage() {
         timezone={timezone}
         categories={categories}
         sponsors={sponsors}
+        forms={forms.map((f) => ({ id: f.id, name: f.name, published: f.publishedVersionId !== null }))}
         values={{
           id: null,
           title: "",
@@ -40,6 +42,7 @@ export default async function NewEventPage() {
           mode: "OFFLINE",
           onlineUrl: "",
           registrationMode: "NONE",
+          formId: null,
           externalRegistrationUrl: "",
           registrationDeadline: "",
           maxParticipants: "",

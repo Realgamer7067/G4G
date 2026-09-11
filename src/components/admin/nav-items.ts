@@ -1,4 +1,4 @@
-import { CalendarDays, FileStack, Handshake, LayoutDashboard, ScrollText, Settings, ShieldCheck, Users, type LucideIcon } from "lucide-react";
+import { CalendarDays, ClipboardList, FileStack, Handshake, LayoutDashboard, ScrollText, Settings, ShieldCheck, Users, type LucideIcon } from "lucide-react";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 
 export type AdminNavSection = "Overview" | "Content" | "Website" | "Administration";
@@ -11,6 +11,7 @@ export const ADMIN_NAV_SECTIONS: readonly AdminNavSection[] = ["Overview", "Cont
 export const ADMIN_NAV: AdminNavItem[] = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, permission: "dashboard.view", section: "Overview" },
   { href: "/admin/events", label: "Events", icon: CalendarDays, permission: "events.edit", section: "Content" },
+  { href: "/admin/forms", label: "Forms", icon: ClipboardList, permission: "forms.responses.view", section: "Content" },
   { href: "/admin/sponsors", label: "Sponsors", icon: Handshake, permission: "sponsors.manage", section: "Content" },
   { href: "/admin/pages", label: "Pages & menu", icon: FileStack, permission: "pages.manage", section: "Website" },
   { href: "/admin/settings", label: "Site settings", icon: Settings, permission: "settings.manage", section: "Website" },
