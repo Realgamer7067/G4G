@@ -6,6 +6,16 @@ export type ActionResult<T = null> =
   | { ok: true; data: T }
   | { ok: false; error: string; fieldErrors?: FieldErrors };
 
+/** Field errors keyed by dotted path (`socials.github`, `footer.columns.0.title`) so nested forms can place them. */
+export function zodFieldErrors(error: z.ZodError): FieldErrors {
+  const out: FieldErrors = {};
+  for (const issue of error.issues) {
+    const key = issue.path.map(String).join(".") || "_form";
+    (out[key] ??= []).push(issue.message);
+  }
+  return out;
+}
+
 export async function runAction<T>(fn: () => Promise<T>): Promise<ActionResult<T>> {
   try {
     return { ok: true, data: await fn() };
@@ -17,11 +27,7 @@ export async function runAction<T>(fn: () => Promise<T>): Promise<ActionResult<T
         : { ok: false, error: error.message };
     }
     if (error instanceof z.ZodError) {
-      return {
-        ok: false,
-        error: "Check the highlighted fields.",
-        fieldErrors: z.flattenError(error).fieldErrors as FieldErrors,
-      };
+      return { ok: false, error: "Check the highlighted fields.", fieldErrors: zodFieldErrors(error) };
     }
     if (error instanceof ForbiddenError || error instanceof UnauthorizedError) {
       return { ok: false, error: error.message };

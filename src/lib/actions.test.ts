@@ -22,6 +22,12 @@ describe("runAction", () => {
       expect(result.fieldErrors?.name?.length).toBe(1);
     }
   });
+  it("keys nested zod errors by dotted path", async () => {
+    const schema = z.object({ socials: z.object({ github: z.url() }), footer: z.object({ columns: z.array(z.object({ title: z.string().min(1) })) }) });
+    const result = await runAction(async () => schema.parse({ socials: { github: "nope" }, footer: { columns: [{ title: "" }] } }));
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(Object.keys(result.fieldErrors ?? {}).sort()).toEqual(["footer.columns.0.title", "socials.github"]);
+  });
   it("maps permission errors", async () => {
     const result = await runAction(async () => {
       throw new ForbiddenError();
