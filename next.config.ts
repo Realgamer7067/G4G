@@ -29,6 +29,11 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   // @node-rs/argon2, sharp, pg and @prisma/client are externalized by Next automatically.
   experimental: { authInterrupts: true },
+  // Upload paths are built from UPLOAD_DIR at runtime, which makes the tracer include the whole
+  // project; keep runtime data, docs and tests out of the standalone bundle.
+  outputFileTracingExcludes: {
+    "/*": ["./data/**/*", "./docs/**/*", "./scripts/**/*", "./src/**/*.test.ts", "./.git/**/*", "./coverage/**/*"],
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

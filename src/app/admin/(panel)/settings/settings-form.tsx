@@ -47,7 +47,7 @@ export function SettingsForm({ values, timezones }: { values: SettingsFormValues
   const err = (path: string) => fieldErrorFor(state, path);
 
   const text = (name: string, label: string, value: string, opts: { hint?: string; type?: string; max?: number; full?: boolean; required?: boolean } = {}) => (
-    <Field label={label} htmlFor={name} hint={opts.hint} error={err(name)} className={opts.full ? "sm:col-span-2" : undefined}>
+    <Field key={name} label={label} htmlFor={name} hint={opts.hint} error={err(name)} className={opts.full ? "sm:col-span-2" : undefined}>
       <Input id={name} name={name} type={opts.type ?? "text"} defaultValue={value} maxLength={opts.max} required={opts.required} {...describedBy(name, err(name))} />
     </Field>
   );
