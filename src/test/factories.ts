@@ -1,3 +1,4 @@
+import { hashPassword } from "@/lib/auth/password";
 import { db } from "@/lib/db";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 import { syncPermissions } from "@/lib/rbac/sync";
@@ -10,6 +11,8 @@ export async function createAdmin(
     permissions?: PermissionKey[];
     overrides?: { permissionKey: PermissionKey; effect: "GRANT" | "DENY" }[];
     isActive?: boolean;
+    email?: string;
+    password?: string;
   } = {},
 ) {
   await syncPermissions(db);
@@ -23,9 +26,9 @@ export async function createAdmin(
   });
   return db.adminUser.create({
     data: {
-      email: `admin${counter}@example.test`,
+      email: opts.email ?? `admin${counter}@example.test`,
       name: `Admin ${counter}`,
-      passwordHash: "unused",
+      passwordHash: opts.password ? await hashPassword(opts.password) : "unused",
       roleId: role.id,
       isActive: opts.isActive ?? true,
       permissionOverrides: { create: opts.overrides ?? [] },
