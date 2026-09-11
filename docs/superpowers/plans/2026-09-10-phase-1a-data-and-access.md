@@ -3288,7 +3288,9 @@ git commit -m "feat(admin): add sign-in, admin shell, dashboard, account page an
 - [ ] **Step 4: Account page** — change name (sidebar updates), change password with a mismatched confirm (inline error), then a valid change (success message; other session revoked).
 - [ ] **Step 5: Mobile width (400px)** — menu button opens the drawer, Escape/overlay closes it, no horizontal scroll.
 - [ ] **Step 6: Keyboard** — Tab from page load reaches "Skip to content", nav links, account, sign out, with visible mint focus rings.
-- [ ] **Step 7: Audit rows** — `psql … -c 'SELECT action, "actorName", "targetLabel" FROM "AuditLog" ORDER BY "createdAt"'` shows login_failed, login, profile_updated, password_changed, logout entries.
+- [ ] **Step 7: Audit rows** — `PGPASSWORD=postgres PGSSLMODE=disable psql -h localhost -p 51214 -U postgres -d template1 -c 'SELECT action, "actorName", "targetLabel" FROM "AuditLog" ORDER BY "createdAt"'` shows login_failed, login, profile_updated, password_changed, logout entries. (`PGSSLMODE=disable` is required: `prisma dev` never answers psql's SSL request and psql hangs.)
+
+**Execution note (2026-09-11):** automated browser sessions must not type passwords, so login behaviour (success, wrong password, lockout, safe redirect, deactivated user) is covered by `src/server/actions/auth.int.test.ts`; authenticated pages were checked with curl using sessions inserted by a throwaway script in `data/` (gitignored); the human does the final in-browser sign-in pass.
 - [ ] **Step 8: Sign out** returns to `/admin/login`; browser back does not show admin content.
 - [ ] **Step 9: Commit any fixes**
 
