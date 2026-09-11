@@ -1,14 +1,25 @@
 import type { MetadataRoute } from "next";
+import type { PageKey } from "@/generated/prisma/enums";
+import { getPublicEvents } from "@/lib/data/events";
 import { getPageSettings } from "@/lib/data/pages";
 import { PAGE_ROUTES, isPageLive } from "@/lib/pages/registry";
 
 export const dynamic = "force-dynamic";
 
-/** Live pages only; switched-off pages drop out. Later phases add events, albums and announcements. */
+/** Live pages only; switched-off pages (and their children) drop out. */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = (process.env.SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
   const pages = await getPageSettings();
-  return pages
+  const live = (key: PageKey) => isPageLive(pages.find((p) => p.key === key));
+
+  const entries: MetadataRoute.Sitemap = pages
     .filter((p) => isPageLive(p))
-    .map((p) => ({ url: `${base}${PAGE_ROUTES[p.key]}`, changeFrequency: "weekly" as const, priority: p.key === "HOME" ? 1 : 0.7 }));
+    .map((p) => ({ url: `${base}${PAGE_ROUTES[p.key]}`, changeFrequency: "weekly", priority: p.key === "HOME" ? 1 : 0.7 }));
+
+  if (live("EVENTS")) {
+    for (const e of await getPublicEvents()) {
+      entries.push({ url: `${base}/events/${e.slug}`, lastModified: e.startAt, changeFrequency: "weekly", priority: 0.6 });
+    }
+  }
+  return entries;
 }

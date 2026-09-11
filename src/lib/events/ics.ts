@@ -28,7 +28,7 @@ export function buildIcs(
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//GfG Student Chapter//Events//EN",
+    "PRODID:-//GFG Student Chapter//Events//EN",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
     "BEGIN:VEVENT",

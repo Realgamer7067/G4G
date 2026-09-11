@@ -15,7 +15,7 @@ export function Sidebar({ items, user }: { items: AdminNavItem[]; user: { name: 
       <Link href="/admin" className="flex items-center gap-3 rounded-xl p-1">
         <LogoTile size="sm" />
         <span className="grid leading-tight">
-          <span className="text-sm font-semibold">GfG Chapter</span>
+          <span className="text-sm font-semibold">GFG Chapter</span>
           <span className="font-mono text-[11px] uppercase tracking-[0.08em] text-muted">Admin</span>
         </span>
       </Link>

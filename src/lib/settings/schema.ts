@@ -65,7 +65,7 @@ export type FooterSettings = z.infer<typeof footerSchema>;
 export const seoSchema = z.object({
   titleTemplate: text(80)
     .refine((v) => v.includes("%s"), "Include %s where the page title goes.")
-    .default("%s · GfG Student Chapter"),
+    .default("%s · GFG Student Chapter"),
   defaultDescription: text(200).default(""),
   ogImageId: z
     .string()

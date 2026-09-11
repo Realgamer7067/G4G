@@ -14,7 +14,7 @@ export const PAGE_ROUTES: Record<PageKey, string> = {
 };
 
 /** Pages whose public routes exist in the codebase. Grows as each phase ships a page. */
-export const IMPLEMENTED_PAGES: ReadonlySet<PageKey> = new Set<PageKey>(["HOME"]);
+export const IMPLEMENTED_PAGES: ReadonlySet<PageKey> = new Set<PageKey>(["HOME", "EVENTS", "SPONSORS"]);
 
 export type PageSettingDTO = {
   key: PageKey;

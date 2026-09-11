@@ -114,6 +114,49 @@ h3 {
   pointer-events: none;
 }
 
+/* Scroll reveal with CSS scroll-driven animations: no JS, and content stays visible where unsupported. */
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .reveal {
+      animation: reveal-up linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 22%;
+    }
+  }
+}
+
+/* Pointer-following glow (Spotlight component). */
+.spotlight {
+  position: relative;
+  isolation: isolate;
+}
+.spotlight::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 0%), rgb(92 201 123 / 0.22), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .spotlight:hover::before {
+    opacity: 1;
+  }
+}
+
 @keyframes menu-in {
   from {
     opacity: 0;

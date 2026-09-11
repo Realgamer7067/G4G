@@ -1827,7 +1827,7 @@ import type { PageKey } from "@/generated/prisma/client";
 
 export const SITE_DEFAULTS = {
   clubName: "GeeksforGeeks Student Chapter",
-  shortName: "GfG Student Chapter",
+  shortName: "GFG Student Chapter",
   tagline: "Learn it. Build it. Ship it together.",
   description:
     "A student-run community for people who like to build: workshops, hackathons, open-source sprints and a crew that actually pushes code.",
@@ -1836,7 +1836,7 @@ export const SITE_DEFAULTS = {
   timezone: "Asia/Kolkata",
   socials: { instagram: "", linkedin: "", github: "", youtube: "", discord: "", whatsapp: "", x: "", custom: [] },
   footer: { blurb: "Built by students, for students.", columns: [], copyright: "GeeksforGeeks Student Chapter" },
-  seo: { titleTemplate: "%s · GfG Student Chapter", defaultDescription: "Workshops, hackathons and a community of student builders." },
+  seo: { titleTemplate: "%s · GFG Student Chapter", defaultDescription: "Workshops, hackathons and a community of student builders." },
 }; // not `as const`: readonly arrays don't satisfy Prisma's JSON input types
 
 export const PAGE_DEFAULTS: { key: PageKey; navLabel: string; navOrder: number; showInNav: boolean }[] = [
@@ -2491,7 +2491,7 @@ const mono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono", dis
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.SITE_URL ?? "http://localhost:3000"),
-  title: { default: "GfG Student Chapter", template: "%s · GfG Student Chapter" },
+  title: { default: "GFG Student Chapter", template: "%s · GFG Student Chapter" },
   description: "Workshops, hackathons and a community of student builders.",
 };
 
@@ -2903,7 +2903,7 @@ export function Sidebar({ items, user }: { items: AdminNavItem[]; user: { name: 
       <Link href="/admin" className="flex items-center gap-3 rounded-xl p-1">
         <LogoTile size="sm" />
         <span className="grid leading-tight">
-          <span className="text-sm font-semibold">GfG Chapter</span>
+          <span className="text-sm font-semibold">GFG Chapter</span>
           <span className="font-mono text-[11px] uppercase tracking-[0.08em] text-muted">Admin</span>
         </span>
       </Link>
@@ -2986,7 +2986,7 @@ export function AdminShell({ sidebar, children }: { sidebar: React.ReactNode; ch
       </a>
       <aside className="sticky top-0 hidden h-dvh border-r border-line bg-pine lg:block">{sidebar}</aside>
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-line bg-pine/90 px-4 py-3 backdrop-blur lg:hidden">
-        <span className="text-sm font-semibold">GfG Chapter Admin</span>
+        <span className="text-sm font-semibold">GFG Chapter Admin</span>
         <button type="button" onClick={() => setOpen(true)} aria-label="Open menu" aria-expanded={open} className="rounded-lg p-2 text-muted hover:bg-raised hover:text-frost">
           <Menu className="size-5" aria-hidden="true" />
         </button>

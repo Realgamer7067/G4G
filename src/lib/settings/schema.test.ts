@@ -33,8 +33,8 @@ describe("footerSchema", () => {
 
 describe("seoSchema", () => {
   it("requires %s in the title template", () => {
-    expect(seoSchema.safeParse({ titleTemplate: "GfG Chapter" }).success).toBe(false);
-    expect(seoSchema.parse({ titleTemplate: "%s · GfG" }).titleTemplate).toBe("%s · GfG");
+    expect(seoSchema.safeParse({ titleTemplate: "GFG Chapter" }).success).toBe(false);
+    expect(seoSchema.parse({ titleTemplate: "%s · GFG" }).titleTemplate).toBe("%s · GFG");
   });
 });
 
@@ -42,7 +42,7 @@ describe("siteSettingsFormSchema", () => {
   it("parses a complete form and trims text", () => {
     const parsed = siteSettingsFormSchema.parse({
       clubName: "  GeeksforGeeks Student Chapter ",
-      shortName: "GfG Chapter",
+      shortName: "GFG Chapter",
       tagline: "Build together",
       description: "We build things.",
       universityName: "Your University",
@@ -54,7 +54,7 @@ describe("siteSettingsFormSchema", () => {
       logoId: "",
       socials: {},
       footer: {},
-      seo: { titleTemplate: "%s · GfG", defaultDescription: "" },
+      seo: { titleTemplate: "%s · GFG", defaultDescription: "" },
       navCta: { label: "", href: "" },
     });
     expect(parsed.clubName).toBe("GeeksforGeeks Student Chapter");

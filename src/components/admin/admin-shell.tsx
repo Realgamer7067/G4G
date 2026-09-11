@@ -22,7 +22,7 @@ export function AdminShell({ sidebar, children }: { sidebar: React.ReactNode; ch
       </a>
       <aside className="sticky top-0 hidden h-dvh border-r border-line bg-pine lg:block">{sidebar}</aside>
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-line bg-pine/90 px-4 py-3 backdrop-blur lg:hidden">
-        <span className="text-sm font-semibold">GfG Chapter Admin</span>
+        <span className="text-sm font-semibold">GFG Chapter Admin</span>
         <button
           type="button"
           onClick={() => setOpenOn(pathname)}

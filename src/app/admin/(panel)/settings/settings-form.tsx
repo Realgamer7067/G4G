@@ -135,7 +135,7 @@ export function SettingsForm({ values, timezones }: { values: SettingsFormValues
         <div className="grid gap-4">
           {text("seo.titleTemplate", "Title template", values.seo.titleTemplate, {
             max: 80,
-            hint: "%s is replaced by the page title, e.g. “Events · GfG Student Chapter”.",
+            hint: "%s is replaced by the page title, e.g. “Events · GFG Student Chapter”.",
           })}
           <Field label="Default description" htmlFor="seo.defaultDescription" error={err("seo.defaultDescription")} hint="About 150 characters. Shown under the link in search results.">
             <Textarea id="seo.defaultDescription" name="seo.defaultDescription" rows={2} defaultValue={values.seo.defaultDescription} maxLength={200} />

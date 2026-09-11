@@ -11,7 +11,7 @@ const { updateSiteSettingsAction } = await import("./settings");
 
 const valid = {
   clubName: "GeeksforGeeks Student Chapter",
-  shortName: "GfG Chapter",
+  shortName: "GFG Chapter",
   tagline: "Build together",
   description: "We build things.",
   universityName: "Test University",
@@ -24,9 +24,9 @@ const valid = {
   "socials.github": "https://github.com/gfg-chapter",
   "socials.custom": "[]",
   "footer.blurb": "Built by students.",
-  "footer.copyright": "GfG Chapter",
+  "footer.copyright": "GFG Chapter",
   "footer.columns": JSON.stringify([{ title: "Explore", links: [{ label: "Events", href: "/events" }] }]),
-  "seo.titleTemplate": "%s · GfG",
+  "seo.titleTemplate": "%s · GFG",
   "seo.defaultDescription": "Workshops and hackathons.",
   "seo.ogImageId": "",
   "navCta.label": "Join us",

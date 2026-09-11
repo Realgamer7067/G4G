@@ -1,4 +1,4 @@
-# GfG Student Chapter Platform — Design Spec
+# GFG Student Chapter Platform — Design Spec
 
 Date: 2026-09-10
 Status: Approved in brainstorming (theme, logo treatment, architecture, form engine)
@@ -40,7 +40,7 @@ Dark-first "pine night" palette. Same tokens in admin, quieter (no glows).
 | line | `#23392C` | borders |
 | frost | `#E6EFE8` | primary text |
 | muted | `#93A89A` | secondary text |
-| brand | `#2F8D46` | GfG green: logo, fills, glows |
+| brand | `#2F8D46` | GFG green: logo, fills, glows |
 | leaf | `#5CC97B` | primary buttons, links, live state |
 | mint | `#BDF3CB` | small highlights, focus rings |
 | amber | `#F2B84B` | Important |

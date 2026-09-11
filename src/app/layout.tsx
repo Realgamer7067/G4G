@@ -8,7 +8,7 @@ const mono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono", dis
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.SITE_URL ?? "http://localhost:3000"),
-  title: { default: "GfG Student Chapter", template: "%s · GfG Student Chapter" },
+  title: { default: "GFG Student Chapter", template: "%s · GFG Student Chapter" },
   description: "Workshops, hackathons and a community of student builders.",
 };
 
