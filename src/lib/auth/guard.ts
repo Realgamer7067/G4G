@@ -22,6 +22,13 @@ export async function requirePagePermission(key: PermissionKey): Promise<Session
   return user;
 }
 
+/** Pages shared by several roles: allowed when the user has at least one of the permissions. */
+export async function requireAnyPagePermission(keys: readonly PermissionKey[]): Promise<SessionUser> {
+  const user = await requireUser();
+  if (!keys.some((k) => can(user, k))) forbidden();
+  return user;
+}
+
 /** Server Actions and route handlers: throw typed errors that runAction() turns into messages. */
 export async function requireActionUser(): Promise<SessionUser> {
   const user = await getSession();

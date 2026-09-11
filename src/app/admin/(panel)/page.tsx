@@ -1,10 +1,14 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { QUICK_ACTIONS } from "@/components/admin/quick-actions";
+import { StatusPill } from "@/components/events/status-pill";
 import { describeAction } from "@/lib/audit-labels";
 import { can, requirePagePermission } from "@/lib/auth/guard";
 import { db } from "@/lib/db";
 import { loadPageSettings } from "@/lib/data/pages";
+import { loadSiteSettings } from "@/lib/data/site";
+import { formatEventWhen } from "@/lib/events/format";
+import { deriveEventStatus } from "@/lib/events/status";
 import { isPageLive } from "@/lib/pages/registry";
 import { PERMISSIONS } from "@/lib/rbac/permissions";
 import { timeAgo } from "@/lib/utils/time";
@@ -25,16 +29,42 @@ function Stat({ label, value, href }: { label: string; value: string | number; h
   );
 }
 
+function Card({ title, href, linkLabel, children }: { title: string; href?: string; linkLabel?: string; children: React.ReactNode }) {
+  const id = `card-${title.toLowerCase().replace(/[^a-z]+/g, "-")}`;
+  return (
+    <section aria-labelledby={id} className="grid content-start gap-4 rounded-2xl border border-line bg-surface p-5 sm:p-6">
+      <div className="flex items-center justify-between gap-3">
+        <h2 id={id} className="font-display text-lg font-semibold">
+          {title}
+        </h2>
+        {href && (
+          <Link href={href} className="text-sm text-leaf hover:underline">
+            {linkLabel ?? "View all"}
+          </Link>
+        )}
+      </div>
+      {children}
+    </section>
+  );
+}
+
 export default async function DashboardPage() {
   const user = await requirePagePermission("dashboard.view");
   const canLogs = can(user, "logs.view");
   const canAdmins = can(user, "admins.manage");
+  const canEvents = can(user, "events.edit") || can(user, "events.publish") || can(user, "events.create");
+  const now = new Date();
 
-  const [activeAdmins, pendingInvites, pages, recent] = await Promise.all([
+  const [activeAdmins, pendingInvites, pages, recent, upcoming, drafts, { timezone }] = await Promise.all([
     db.adminUser.count({ where: { isActive: true } }),
-    canAdmins ? db.invite.count({ where: { acceptedAt: null, revokedAt: null, expiresAt: { gt: new Date() } } }) : Promise.resolve(0),
+    canAdmins ? db.invite.count({ where: { acceptedAt: null, revokedAt: null, expiresAt: { gt: now } } }) : Promise.resolve(0),
     loadPageSettings(),
     canLogs ? db.auditLog.findMany({ orderBy: { createdAt: "desc" }, take: 8 }) : Promise.resolve([]),
+    canEvents
+      ? db.event.findMany({ where: { lifecycle: { in: ["PUBLISHED", "CANCELLED"] }, endAt: { gte: now } }, orderBy: { startAt: "asc" }, take: 5 })
+      : Promise.resolve([]),
+    canEvents ? db.event.findMany({ where: { lifecycle: "DRAFT" }, orderBy: { updatedAt: "desc" }, take: 5 }) : Promise.resolve([]),
+    loadSiteSettings(),
   ]);
   const livePages = pages.filter((p) => isPageLive(p)).length;
   const actions = QUICK_ACTIONS.filter((a) => can(user, a.permission));
@@ -84,22 +114,58 @@ export default async function DashboardPage() {
       )}
 
       <section aria-label="At a glance" className="grid gap-3 sm:grid-cols-3">
-        <Stat label="Active admins" value={activeAdmins} href={canAdmins ? "/admin/users" : undefined} />
-        {canAdmins && <Stat label="Pending invites" value={pendingInvites} href="/admin/users" />}
+        {canEvents ? (
+          <Stat label="Upcoming events" value={upcoming.length} href="/admin/events" />
+        ) : (
+          <Stat label="Active admins" value={activeAdmins} href={canAdmins ? "/admin/users" : undefined} />
+        )}
+        {canEvents ? <Stat label="Draft events" value={drafts.length} href="/admin/events?view=drafts" /> : canAdmins && <Stat label="Pending invites" value={pendingInvites} href="/admin/users" />}
         <Stat label={`of ${pages.length} pages live`} value={livePages} href={can(user, "pages.manage") ? "/admin/pages" : undefined} />
       </section>
 
+      {canEvents && (
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Card title="Upcoming events" href="/admin/events">
+            {upcoming.length === 0 ? (
+              <p className="text-sm text-muted">Nothing scheduled. {can(user, "events.create") && <Link href="/admin/events/new" className="text-leaf hover:underline">Create an event</Link>}</p>
+            ) : (
+              <ul className="grid gap-3">
+                {upcoming.map((e) => (
+                  <li key={e.id}>
+                    <Link href={`/admin/events/${e.id}`} className="grid gap-1 rounded-xl p-2 -m-2 hover:bg-raised/50">
+                      <span className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="font-medium">{e.title}</span>
+                        <StatusPill status={deriveEventStatus(e, null, now)} />
+                      </span>
+                      <span className="text-xs text-muted">{formatEventWhen(e.startAt, e.endAt, timezone).full}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+          <Card title="Drafts" href="/admin/events?view=drafts">
+            {drafts.length === 0 ? (
+              <p className="text-sm text-muted">No drafts waiting.</p>
+            ) : (
+              <ul className="grid gap-3">
+                {drafts.map((e) => (
+                  <li key={e.id}>
+                    <Link href={`/admin/events/${e.id}`} className="grid gap-0.5 rounded-xl p-2 -m-2 hover:bg-raised/50">
+                      <span className="font-medium">{e.title}</span>
+                      <span className="text-xs text-muted">Edited {timeAgo(e.updatedAt)}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+        </div>
+      )}
+
       <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
         {canLogs && (
-          <section aria-labelledby="activity" className="grid content-start gap-4 rounded-2xl border border-line bg-surface p-5 sm:p-6">
-            <div className="flex items-center justify-between gap-3">
-              <h2 id="activity" className="font-display text-lg font-semibold">
-                Recent activity
-              </h2>
-              <Link href="/admin/audit" className="text-sm text-leaf hover:underline">
-                View all
-              </Link>
-            </div>
+          <Card title="Recent activity" href="/admin/audit">
             {recent.length === 0 ? (
               <p className="text-sm text-muted">Nothing yet.</p>
             ) : (
@@ -118,13 +184,9 @@ export default async function DashboardPage() {
                 ))}
               </ol>
             )}
-          </section>
+          </Card>
         )}
-
-        <section aria-labelledby="access" className="grid content-start gap-4 rounded-2xl border border-line bg-surface p-5 sm:p-6">
-          <h2 id="access" className="font-display text-lg font-semibold">
-            Your access
-          </h2>
+        <Card title="Your access">
           <dl className="grid gap-4">
             {[...groups].map(([group, items]) => (
               <div key={group} className="grid gap-1">
@@ -137,7 +199,7 @@ export default async function DashboardPage() {
               </div>
             ))}
           </dl>
-        </section>
+        </Card>
       </div>
     </div>
   );

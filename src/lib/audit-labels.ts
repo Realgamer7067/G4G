@@ -20,6 +20,22 @@ const LABELS: Record<string, string> = {
   "settings.updated": "Updated site settings",
   "pages.updated": "Updated pages & menu",
   "media.uploaded": "Uploaded an image",
+  "event.created": "Created an event",
+  "event.updated": "Edited an event",
+  "event.duplicated": "Duplicated an event",
+  "event.published": "Published an event",
+  "event.unpublished": "Unpublished an event",
+  "event.cancelled": "Cancelled an event",
+  "event.reinstated": "Reinstated an event",
+  "event.archived": "Archived an event",
+  "event.restored": "Restored an event",
+  "event.deleted": "Deleted an event",
+  "sponsor.created": "Added a sponsor",
+  "sponsor.updated": "Edited a sponsor",
+  "sponsor.deleted": "Removed a sponsor",
+  "category.created": "Added an event category",
+  "category.updated": "Renamed an event category",
+  "category.deleted": "Deleted an event category",
 };
 
 export const AUDIT_ACTION_FAMILIES: { value: string; label: string }[] = [
@@ -30,6 +46,9 @@ export const AUDIT_ACTION_FAMILIES: { value: string; label: string }[] = [
   { value: "settings", label: "Site settings" },
   { value: "pages", label: "Pages & menu" },
   { value: "media", label: "Uploads" },
+  { value: "event", label: "Events" },
+  { value: "sponsor", label: "Sponsors" },
+  { value: "category", label: "Event categories" },
 ];
 
 export function registerAuditLabels(labels: Record<string, string>, families: { value: string; label: string }[] = []): void {

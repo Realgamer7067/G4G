@@ -43,6 +43,77 @@ h3 {
   outline-offset: 2px;
 }
 
+/* Rendered rich text (event descriptions, announcements) and the editor surface. */
+.rich-text {
+  line-height: 1.7;
+  color: var(--color-frost);
+}
+.rich-text > * + * {
+  margin-top: 0.9em;
+}
+.rich-text h2 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-top: 1.6em;
+}
+.rich-text h3 {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-top: 1.4em;
+}
+.rich-text a {
+  color: var(--color-leaf);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.rich-text ul {
+  list-style: disc;
+  padding-left: 1.4em;
+}
+.rich-text ol {
+  list-style: decimal;
+  padding-left: 1.4em;
+}
+.rich-text li + li {
+  margin-top: 0.3em;
+}
+.rich-text li::marker {
+  color: var(--color-leaf);
+}
+.rich-text blockquote {
+  border-left: 3px solid var(--color-brand);
+  padding-left: 1em;
+  color: var(--color-muted);
+}
+.rich-text code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: var(--color-raised);
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+}
+.rich-text pre {
+  font-family: var(--font-mono);
+  background: var(--color-night);
+  border: 1px solid var(--color-line);
+  border-radius: 10px;
+  padding: 0.9em 1em;
+  overflow-x: auto;
+}
+.rich-text hr {
+  border-color: var(--color-line);
+}
+.rich-text p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: color-mix(in oklab, var(--color-muted) 60%, transparent);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
 @keyframes menu-in {
   from {
     opacity: 0;
