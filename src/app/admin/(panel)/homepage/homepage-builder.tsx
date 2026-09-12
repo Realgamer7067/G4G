@@ -38,6 +38,7 @@ export function HomepageBuilder({
   const [justPublished, setJustPublished] = useState(false);
   const [restoringId, setRestoringId] = useState<string | null>(null);
   const [restoreError, setRestoreError] = useState<string | null>(null);
+  const [restoredNonce, setRestoredNonce] = useState(0);
 
   const sectionsRef = useRef(sections);
   useEffect(() => {
@@ -96,6 +97,7 @@ export function HomepageBuilder({
   }, [saveState]);
 
   function apply(fn: (s: HomepageSections) => HomepageSections) {
+    if (restoringId !== null) return;
     setSections((s) => {
       const next = fn(s);
       if (next !== s) {
@@ -155,6 +157,7 @@ export function HomepageBuilder({
     setSections(result.data.sections);
     setSelectedId(result.data.sections[0]?.id ?? null);
     setSaveState("saved");
+    setRestoredNonce((n) => n + 1);
   }
 
   const selected = sections.find((s) => s.id === selectedId) ?? null;
@@ -206,7 +209,7 @@ export function HomepageBuilder({
         </p>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
+      <div className={cn("grid gap-4 lg:grid-cols-[320px_1fr]", restoringId !== null && "pointer-events-none opacity-60")}>
         <SectionList
           sections={sections}
           selectedId={selectedId}
@@ -235,7 +238,7 @@ export function HomepageBuilder({
         </p>
       )}
       <Panel title="History" description="Past published revisions. Restoring replaces the current draft with that revision's content.">
-        <HistoryPanel history={history} onRestore={handleRestore} restoringId={restoringId} disabled={publishing || restoringId !== null} />
+        <HistoryPanel history={history} onRestore={handleRestore} restoringId={restoringId} disabled={publishing || restoringId !== null} resetSignal={restoredNonce} />
       </Panel>
     </div>
   );

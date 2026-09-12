@@ -9,13 +9,23 @@ export function HistoryPanel({
   onRestore,
   restoringId,
   disabled,
+  resetSignal,
 }: {
   history: HomepageHistoryEntry[];
   onRestore: (historyId: string) => void;
   restoringId: string | null;
   disabled: boolean;
+  /** Bumped by the parent after a successful restore, so the armed row un-arms itself. */
+  resetSignal: number;
 }) {
   const [armedId, setArmedId] = useState<string | null>(null);
+  // Un-arm on a successful restore, adjusting state during render (React's documented pattern for
+  // resetting state in response to a prop change) rather than in an effect.
+  const [prevResetSignal, setPrevResetSignal] = useState(resetSignal);
+  if (resetSignal !== prevResetSignal) {
+    setPrevResetSignal(resetSignal);
+    setArmedId(null);
+  }
 
   if (history.length === 0) {
     return <p className="text-sm text-muted">No published revisions yet.</p>;
