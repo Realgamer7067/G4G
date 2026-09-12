@@ -3,12 +3,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, Check, Eye, Loader2 } from "lucide-react";
+import { Panel } from "@/components/admin/page-header";
 import { Button } from "@/components/ui/button";
+import type { HomepageHistoryEntry } from "@/lib/data/homepage";
 import { blankSection } from "@/lib/homepage/sections/factories";
 import { addSection, removeSection, reorderSections, toggleSection, updateSection } from "@/lib/homepage/sections/ops";
 import type { HomepageSections, Section, SectionType } from "@/lib/homepage/sections/schema";
-import { publishHomepageAction, saveHomepageDraftAction } from "@/server/actions/homepage";
+import { publishHomepageAction, restoreHomepageRevisionAction, saveHomepageDraftAction } from "@/server/actions/homepage";
 import { cn } from "@/lib/utils/cn";
+import { HistoryPanel } from "./history-panel";
 import { Inspector } from "./inspector";
 import { SectionList } from "./section-list";
 
@@ -18,10 +21,12 @@ export function HomepageBuilder({
   revisionId,
   initialSections,
   canPublish,
+  history,
 }: {
   revisionId: string;
   initialSections: HomepageSections;
   canPublish: boolean;
+  history: HomepageHistoryEntry[];
 }) {
   const router = useRouter();
   const [sections, setSections] = useState(initialSections);
@@ -31,6 +36,8 @@ export function HomepageBuilder({
   const [publishing, setPublishing] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
   const [justPublished, setJustPublished] = useState(false);
+  const [restoringId, setRestoringId] = useState<string | null>(null);
+  const [restoreError, setRestoreError] = useState<string | null>(null);
 
   const sectionsRef = useRef(sections);
   useEffect(() => {
@@ -117,6 +124,39 @@ export function HomepageBuilder({
     router.refresh();
   }
 
+  async function handleRestore(historyId: string) {
+    setRestoreError(null);
+    setRestoringId(historyId);
+    const flushed = await flushSave();
+    if (!flushed) {
+      setRestoringId(null);
+      setRestoreError("Could not save your current changes first. Fix the error above, then try restoring again.");
+      return;
+    }
+    // flushSave() already persisted sectionsRef.current — but if a debounced autosave from a
+    // pre-restore edit is still pending, it could fire mid-restore (after savePromiseRef clears)
+    // and write those same stale pre-restore sections back over the restore transaction. Cancel it
+    // now, before the restore call goes out.
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    const result = await restoreHomepageRevisionAction(revisionId, historyId);
+    setRestoringId(null);
+    if (!result.ok) {
+      setRestoreError(result.error);
+      return;
+    }
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    setSaveError(null);
+    setSections(result.data.sections);
+    setSelectedId(result.data.sections[0]?.id ?? null);
+    setSaveState("saved");
+  }
+
   const selected = sections.find((s) => s.id === selectedId) ?? null;
   const saveLabel =
     saveState === "saving" ? "Saving…" : saveState === "error" ? "Not saved" : saveState === "dirty" ? "Unsaved changes…" : saveState === "saved" ? "Draft saved" : null;
@@ -142,7 +182,7 @@ export function HomepageBuilder({
             <Eye className="size-4" aria-hidden="true" /> Preview
           </a>
           {canPublish && (
-            <Button type="button" size="sm" disabled={publishing} onClick={() => void handlePublish()}>
+            <Button type="button" size="sm" disabled={publishing || restoringId !== null} onClick={() => void handlePublish()}>
               {publishing && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
               {publishing ? "Publishing…" : "Publish"}
             </Button>
@@ -188,6 +228,15 @@ export function HomepageBuilder({
           onUpdate={(patch: Partial<Section>) => selected && apply((s) => updateSection(s, selected.id, patch))}
         />
       </div>
+
+      {restoreError && (
+        <p role="alert" className="rounded-xl border border-danger/30 bg-danger/10 p-3 text-sm text-danger">
+          {restoreError}
+        </p>
+      )}
+      <Panel title="History" description="Past published revisions. Restoring replaces the current draft with that revision's content.">
+        <HistoryPanel history={history} onRestore={handleRestore} restoringId={restoringId} disabled={publishing || restoringId !== null} />
+      </Panel>
     </div>
   );
 }
