@@ -69,7 +69,7 @@ export function SectionList({
 
   return (
     <div className="grid gap-3">
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <DndContext id="homepage-section-list" sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={sections.map((s) => s.id)} strategy={verticalListSortingStrategy}>
           <ul className="grid gap-2">
             {sections.map((s) => (
