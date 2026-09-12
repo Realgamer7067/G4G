@@ -24,9 +24,13 @@ export function CtaForm({ section, onUpdate }: { section: SectionOfType<"cta">; 
         </select>
       </label>
       {c.ctas.map((cta, i) => (
-        <div key={i} className="grid grid-cols-[1fr_1fr_auto] gap-1.5">
+        <div key={i} className="grid grid-cols-[1fr_1fr_auto_auto] gap-1.5">
           <input value={cta.label} onChange={(e) => patchContent({ ctas: c.ctas.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)) })} placeholder="Label" className="rounded-lg border border-line bg-transparent px-2 py-1 text-sm" />
           <input value={cta.href} onChange={(e) => patchContent({ ctas: c.ctas.map((x, j) => (j === i ? { ...x, href: e.target.value } : x)) })} placeholder="/link" className="rounded-lg border border-line bg-transparent px-2 py-1 text-sm" />
+          <select value={cta.style} onChange={(e) => patchContent({ ctas: c.ctas.map((x, j) => (j === i ? { ...x, style: e.target.value as typeof x.style } : x)) })} className="rounded-lg border border-line bg-transparent px-2 py-1 text-sm">
+            <option value="primary">Primary</option>
+            <option value="secondary">Secondary</option>
+          </select>
           {c.ctas.length > 1 && (
             <button type="button" onClick={() => patchContent({ ctas: c.ctas.filter((_, j) => j !== i) })} className="rounded-lg border border-line px-2 text-sm text-muted hover:text-danger">
               ×

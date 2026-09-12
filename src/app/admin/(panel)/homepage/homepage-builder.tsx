@@ -14,7 +14,15 @@ import { SectionList } from "./section-list";
 
 type SaveState = "idle" | "dirty" | "saving" | "saved" | "error";
 
-export function HomepageBuilder({ revisionId, initialSections }: { revisionId: string; initialSections: HomepageSections }) {
+export function HomepageBuilder({
+  revisionId,
+  initialSections,
+  canPublish,
+}: {
+  revisionId: string;
+  initialSections: HomepageSections;
+  canPublish: boolean;
+}) {
   const router = useRouter();
   const [sections, setSections] = useState(initialSections);
   const [selectedId, setSelectedId] = useState<string | null>(initialSections[0]?.id ?? null);
@@ -133,10 +141,12 @@ export function HomepageBuilder({ revisionId, initialSections }: { revisionId: s
           >
             <Eye className="size-4" aria-hidden="true" /> Preview
           </a>
-          <Button type="button" size="sm" disabled={publishing} onClick={() => void handlePublish()}>
-            {publishing && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-            {publishing ? "Publishing…" : "Publish"}
-          </Button>
+          {canPublish && (
+            <Button type="button" size="sm" disabled={publishing} onClick={() => void handlePublish()}>
+              {publishing && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
+              {publishing ? "Publishing…" : "Publish"}
+            </Button>
+          )}
         </div>
       </div>
 
