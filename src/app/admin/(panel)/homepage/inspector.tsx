@@ -1,9 +1,12 @@
 "use client";
 
 import type { Section } from "@/lib/homepage/sections/schema";
+import { AboutForm } from "./section-forms/about";
+import { AchievementsForm } from "./section-forms/achievements";
 import { CtaForm } from "./section-forms/cta";
 import { EventSpotlightForm } from "./section-forms/event-spotlight";
 import { HeroForm } from "./section-forms/hero";
+import { SocialForm } from "./section-forms/social";
 import { StatsForm } from "./section-forms/stats";
 
 export function Inspector({ section, onUpdate }: { section: Section | null; onUpdate: (patch: Partial<Section>) => void }) {
@@ -30,6 +33,13 @@ export function Inspector({ section, onUpdate }: { section: Section | null; onUp
           <HeroForm section={section} onUpdate={onUpdate} />
         </div>
       );
+    case "about":
+      return (
+        <div className="rounded-2xl border border-line bg-surface p-4">
+          {common}
+          <AboutForm section={section} onUpdate={onUpdate} />
+        </div>
+      );
     case "stats":
       return (
         <div className="rounded-2xl border border-line bg-surface p-4">
@@ -42,6 +52,20 @@ export function Inspector({ section, onUpdate }: { section: Section | null; onUp
         <div className="rounded-2xl border border-line bg-surface p-4">
           {common}
           <EventSpotlightForm section={section} onUpdate={onUpdate} />
+        </div>
+      );
+    case "achievements":
+      return (
+        <div className="rounded-2xl border border-line bg-surface p-4">
+          {common}
+          <AchievementsForm section={section} onUpdate={onUpdate} />
+        </div>
+      );
+    case "social":
+      return (
+        <div className="rounded-2xl border border-line bg-surface p-4">
+          {common}
+          <SocialForm section={section} onUpdate={onUpdate} />
         </div>
       );
     case "cta":
