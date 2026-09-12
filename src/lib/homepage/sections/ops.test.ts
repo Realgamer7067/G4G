@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { blankSection } from "./factories";
 import { addSection, moveSection, removeSection, reorderSections, toggleSection, updateSection } from "./ops";
-import type { HomepageSections } from "./schema";
+import type { HomepageSections, Section } from "./schema";
 
 function fixture(): HomepageSections {
   return [
@@ -77,7 +77,7 @@ describe("toggleSection", () => {
 
 describe("updateSection", () => {
   it("merges a content patch without touching other fields", () => {
-    const next = updateSection(fixture(), "a", { content: { heading: "New heading" } });
+    const next = updateSection(fixture(), "a", { content: { heading: "New heading" } } as Partial<Omit<Section, "id" | "type">>);
     const a = next.find((s) => s.id === "a");
     expect(a?.type === "hero" && a.content.heading).toBe("New heading");
     expect(a?.type === "hero" && a.content.backgroundVariant).toBe("rings");
@@ -89,7 +89,7 @@ describe("updateSection", () => {
   });
 
   it("leaves other sections untouched", () => {
-    const next = updateSection(fixture(), "a", { content: { heading: "X" } });
+    const next = updateSection(fixture(), "a", { content: { heading: "X" } } as Partial<Omit<Section, "id" | "type">>);
     expect(next.find((s) => s.id === "b")).toEqual(fixture()[1]);
   });
 });
