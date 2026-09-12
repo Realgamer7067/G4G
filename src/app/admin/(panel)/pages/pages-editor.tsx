@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { ArrowDown, ArrowUp, ExternalLink } from "lucide-react";
 import { SaveBar, fieldErrorFor, useFormAction } from "@/components/admin/form-state";
 import { Field } from "@/components/ui/field";
@@ -84,6 +85,11 @@ export function PagesEditor({ pages }: { pages: EditablePage[] }) {
                   <a href={page.href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-leaf hover:underline">
                     View <ExternalLink className="size-3" aria-hidden="true" />
                   </a>
+                )}
+                {(key === "ABOUT" || key === "CONTACT") && (
+                  <Link href={`/admin/pages/${key.toLowerCase()}`} className="inline-flex items-center gap-1 text-xs text-frost hover:text-leaf hover:underline">
+                    Edit content →
+                  </Link>
                 )}
               </div>
 
