@@ -3,10 +3,14 @@
 import type { Section } from "@/lib/homepage/sections/schema";
 import { AboutForm } from "./section-forms/about";
 import { AchievementsForm } from "./section-forms/achievements";
+import { AnnouncementsForm } from "./section-forms/announcements";
 import { CtaForm } from "./section-forms/cta";
 import { EventSpotlightForm } from "./section-forms/event-spotlight";
+import { FeaturedTeamForm } from "./section-forms/featured-team";
+import { GalleryHighlightsForm } from "./section-forms/gallery-highlights";
 import { HeroForm } from "./section-forms/hero";
 import { SocialForm } from "./section-forms/social";
+import { SponsorsForm } from "./section-forms/sponsors";
 import { StatsForm } from "./section-forms/stats";
 
 export function Inspector({ section, onUpdate }: { section: Section | null; onUpdate: (patch: Partial<Section>) => void }) {
@@ -73,6 +77,34 @@ export function Inspector({ section, onUpdate }: { section: Section | null; onUp
         <div className="rounded-2xl border border-line bg-surface p-4">
           {common}
           <CtaForm section={section} onUpdate={onUpdate} />
+        </div>
+      );
+    case "announcements":
+      return (
+        <div className="rounded-2xl border border-line bg-surface p-4">
+          {common}
+          <AnnouncementsForm section={section} onUpdate={onUpdate} />
+        </div>
+      );
+    case "featured_team":
+      return (
+        <div className="rounded-2xl border border-line bg-surface p-4">
+          {common}
+          <FeaturedTeamForm section={section} onUpdate={onUpdate} />
+        </div>
+      );
+    case "gallery_highlights":
+      return (
+        <div className="rounded-2xl border border-line bg-surface p-4">
+          {common}
+          <GalleryHighlightsForm section={section} onUpdate={onUpdate} />
+        </div>
+      );
+    case "sponsors":
+      return (
+        <div className="rounded-2xl border border-line bg-surface p-4">
+          {common}
+          <SponsorsForm section={section} onUpdate={onUpdate} />
         </div>
       );
     default:

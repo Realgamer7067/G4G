@@ -4,10 +4,14 @@ import type { PublicImage } from "@/lib/media/public-image";
 import type { Socials } from "@/lib/settings/schema";
 import { AboutSection } from "./sections/about";
 import { AchievementsSection } from "./sections/achievements";
+import { AnnouncementsSection } from "./sections/announcements";
 import { CtaSection } from "./sections/cta";
 import { EventSpotlightSection } from "./sections/event-spotlight";
+import { FeaturedTeamSection } from "./sections/featured-team";
+import { GalleryHighlightsSection } from "./sections/gallery-highlights";
 import { HeroSection } from "./sections/hero";
 import { SocialSection } from "./sections/social";
+import { SponsorsSection } from "./sections/sponsors";
 import { StatsSection } from "./sections/stats";
 
 export function SectionRenderer({
@@ -43,8 +47,16 @@ export function SectionRenderer({
               return <SocialSection key={section.id} section={section} socials={socials} />;
             case "cta":
               return <CtaSection key={section.id} section={section} />;
+            case "announcements":
+              return <AnnouncementsSection key={section.id} section={section} />;
+            case "featured_team":
+              return <FeaturedTeamSection key={section.id} section={section} />;
+            case "gallery_highlights":
+              return <GalleryHighlightsSection key={section.id} section={section} />;
+            case "sponsors":
+              return <SponsorsSection key={section.id} section={section} />;
             default:
-              return null; // announcements, featured_team, gallery_highlights, sponsors — wired in Task Group D
+              return null;
           }
         })}
     </>
