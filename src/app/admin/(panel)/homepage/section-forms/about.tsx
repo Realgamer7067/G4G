@@ -15,7 +15,7 @@ export function AboutForm({ section, onUpdate }: { section: SectionOfType<"about
         <span className="text-muted">Body (one paragraph per line)</span>
         <textarea value={c.body} onChange={(e) => patchContent({ body: e.target.value })} rows={5} className="rounded-lg border border-line bg-transparent px-3 py-1.5 text-sm" />
       </label>
-      <p className="text-xs text-muted">Image upload for this section reuses the same upload endpoint as other admin image fields — wire it up the same way `ImagePicker` does in `src/app/admin/(panel)/forms/[id]/build/inspector.tsx` if a photo is wanted here; `imageId` is already in the schema and ready to receive it.</p>
+      <p className="text-xs text-muted">Image support for this section isn&apos;t available yet.</p>
     </div>
   );
 }

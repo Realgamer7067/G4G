@@ -3,7 +3,6 @@ import Link from "next/link";
 import { LogoTile } from "@/components/brand/logo-tile";
 import { Rings } from "@/components/site/rings";
 import { SocialIcon, socialLinks } from "@/components/site/social-icons";
-import type { PublicImage } from "@/lib/media/public-image";
 import type { Socials } from "@/lib/settings/schema";
 import type { SectionOfType } from "@/lib/homepage/sections/schema";
 import { cn } from "@/lib/utils/cn";

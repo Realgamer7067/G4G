@@ -57,16 +57,17 @@ export async function restoreHomepageRevisionAction(revisionId: string, historyI
     const user = await requirePermission("homepage.edit");
     const historic = await db.homepageRevision.findUnique({ where: { id: historyId } });
     if (!historic || historic.status === "DRAFT") throw new UserError("That revision no longer exists.");
+    const sections = homepageSectionsSchema.parse(historic.sections);
     const meta = await getRequestMeta();
     await db.$transaction(async (tx) => {
       const { count } = await tx.homepageRevision.updateMany({
         where: { id: revisionId, status: "DRAFT" },
-        data: { sections: historic.sections as Prisma.InputJsonValue },
+        data: { sections: sections as Prisma.InputJsonValue },
       });
       if (!count) throw new UserError("That draft no longer exists. Reload the page.");
       await writeAuditLog(tx, { actor: actorOf(user), action: "homepage.restored", target: { type: "HomepageRevision", id: historyId, label: "Homepage" }, meta });
     });
     revalidatePath("/admin/homepage");
-    return { sections: homepageSectionsSchema.parse(historic.sections) };
+    return { sections };
   });
 }

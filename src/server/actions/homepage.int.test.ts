@@ -82,4 +82,17 @@ describe("restoreHomepageRevisionAction", () => {
     expect((row.sections as { content: { heading: string } }[])[0].content.heading).toBe("old");
     expect(await db.auditLog.count({ where: { action: "homepage.restored" } })).toBe(1);
   });
+
+  it("rejects a historic revision with invalid sections without touching the draft", async () => {
+    await signIn({ permissions: ["homepage.edit", "homepage.publish"] });
+    const draft = await db.homepageRevision.create({ data: { status: "DRAFT", sections: [ctaSection("current")] } });
+    const bad = await db.homepageRevision.create({ data: { status: "SUPERSEDED", sections: [{ id: "sec_1", type: "bogus" }] } });
+
+    const result = await restoreHomepageRevisionAction(draft.id, bad.id);
+
+    expect(result.ok).toBe(false);
+    const row = await db.homepageRevision.findUniqueOrThrow({ where: { id: draft.id } });
+    expect((row.sections as { content: { heading: string } }[])[0].content.heading).toBe("current");
+    expect(await db.auditLog.count({ where: { action: "homepage.restored" } })).toBe(0);
+  });
 });

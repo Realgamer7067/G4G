@@ -39,7 +39,17 @@ export function StatsForm({ section, onUpdate }: { section: SectionOfType<"stats
               <input
                 type="number"
                 value={item.value ?? ""}
-                onChange={(e) => patchContent({ items: c.items.map((x, j) => (j === i ? { ...x, value: e.target.value ? Number(e.target.value) : null } : x)) })}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  if (raw === "") {
+                    patchContent({ items: c.items.map((x, j) => (j === i ? { ...x, value: null } : x)) });
+                    return;
+                  }
+                  const n = Number(raw);
+                  if (Number.isFinite(n)) {
+                    patchContent({ items: c.items.map((x, j) => (j === i ? { ...x, value: Math.min(1_000_000, Math.max(0, n)) } : x)) });
+                  }
+                }}
                 placeholder="Value"
                 className="rounded-lg border border-line bg-transparent px-2 py-1 text-sm"
               />

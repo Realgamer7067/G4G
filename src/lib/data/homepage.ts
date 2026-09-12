@@ -18,6 +18,12 @@ export async function loadDraftHomepage(): Promise<{ id: string; sections: Homep
   return { id: created.id, sections: [] };
 }
 
+/** Read-only variant for callers that must never create the draft row (e.g. preview). */
+export async function loadDraftHomepageSections(): Promise<HomepageSections> {
+  const existing = await db.homepageRevision.findFirst({ where: { status: "DRAFT" } });
+  return existing ? parseSections(existing.sections) : [];
+}
+
 async function loadPublishedHomepage(): Promise<HomepageSections> {
   const row = await db.homepageRevision.findFirst({ where: { status: "PUBLISHED" }, orderBy: { publishedAt: "desc" } });
   return row ? parseSections(row.sections) : [];
