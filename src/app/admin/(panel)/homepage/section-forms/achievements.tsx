@@ -15,7 +15,16 @@ export function AchievementsForm({ section, onUpdate }: { section: SectionOfType
             <input
               type="number"
               value={item.year}
-              onChange={(e) => patchContent({ items: c.items.map((x, j) => (j === i ? { ...x, year: Number(e.target.value) } : x)) })}
+              onChange={(e) => {
+                // Number("") is 0, which fails the schema's min(1990) server-side and wedges the
+                // save-status pill on an error until a valid year is retyped. Leave the item's year
+                // unchanged while the field is transiently empty or not-yet-a-number instead of
+                // pushing an invalid value upstream.
+                const n = Number(e.target.value);
+                if (e.target.value !== "" && Number.isFinite(n)) {
+                  patchContent({ items: c.items.map((x, j) => (j === i ? { ...x, year: n } : x)) });
+                }
+              }}
               placeholder="Year"
               className="rounded-lg border border-line bg-transparent px-2 py-1 text-sm"
             />
