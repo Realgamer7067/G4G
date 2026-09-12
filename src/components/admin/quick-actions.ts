@@ -1,10 +1,11 @@
-import { CalendarPlus, ClipboardPlus, FileStack, Handshake, Settings, ShieldPlus, UserPlus, type LucideIcon } from "lucide-react";
+import { CalendarPlus, ClipboardPlus, FileStack, Handshake, LayoutTemplate, Settings, ShieldPlus, UserPlus, type LucideIcon } from "lucide-react";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 
 export type QuickAction = { href: string; label: string; description: string; icon: LucideIcon; permission: PermissionKey };
 
 /** Dashboard shortcuts. Only screens that exist; later phases prepend event, form, announcement, team and gallery actions. */
 export const QUICK_ACTIONS: QuickAction[] = [
+  { href: "/admin/homepage", label: "Edit homepage", description: "Sections, layout and what's live", icon: LayoutTemplate, permission: "homepage.edit" },
   { href: "/admin/events/new", label: "Create event", description: "Start a draft with poster and details", icon: CalendarPlus, permission: "events.create" },
   { href: "/admin/forms/new", label: "Create form", description: "Multi-page form with logic", icon: ClipboardPlus, permission: "forms.create" },
   { href: "/admin/sponsors/new", label: "Add sponsor", description: "Logo, link and partner type", icon: Handshake, permission: "sponsors.manage" },
