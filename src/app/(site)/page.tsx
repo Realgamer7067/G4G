@@ -1,9 +1,10 @@
 import { SectionRenderer } from "@/components/homepage/section-renderer";
-import { getPublishedHomepage } from "@/lib/data/homepage";
+import { getPublishedHomepage, resolveHomepageImages } from "@/lib/data/homepage";
 import { getSiteSettings } from "@/lib/data/site";
 
 export default async function HomePage() {
-  const [sections, site] = await Promise.all([getPublishedHomepage(), getSiteSettings()]);
+  const sections = await getPublishedHomepage();
+  const [site, images] = await Promise.all([getSiteSettings(), resolveHomepageImages(sections)]);
   if (sections.length === 0) {
     return (
       <section className="mx-auto grid max-w-3xl gap-3 px-4 py-24 text-center">
@@ -12,5 +13,5 @@ export default async function HomePage() {
       </section>
     );
   }
-  return <SectionRenderer sections={sections} images={{}} socials={site.socials} now={new Date()} timezone={site.timezone} />;
+  return <SectionRenderer sections={sections} images={images} socials={site.socials} now={new Date()} timezone={site.timezone} />;
 }

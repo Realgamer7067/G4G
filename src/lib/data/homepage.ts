@@ -3,6 +3,7 @@ import { unstable_cache } from "next/cache";
 import { TAGS } from "@/lib/cache-tags";
 import { db } from "@/lib/db";
 import { homepageSectionsSchema, type HomepageSections } from "@/lib/homepage/sections/schema";
+import { publicImageSelect, toPublicImage, type PublicImage } from "@/lib/media/public-image";
 
 function parseSections(raw: unknown): HomepageSections {
   const parsed = homepageSectionsSchema.safeParse(raw);
@@ -40,4 +41,20 @@ export async function loadHomepageHistory(): Promise<HomepageHistoryEntry[]> {
     publishedAt: r.publishedAt?.toISOString() ?? null,
     publishedByName: r.publishedBy?.name ?? null,
   }));
+}
+
+export async function resolveHomepageImages(sections: HomepageSections): Promise<Record<string, PublicImage>> {
+  const ids = new Set<string>();
+  for (const s of sections) {
+    if (s.type === "about" && s.content.imageId) ids.add(s.content.imageId);
+    if (s.type === "achievements") for (const item of s.content.items) if (item.imageId) ids.add(item.imageId);
+  }
+  if (ids.size === 0) return {};
+  const uploads = await db.upload.findMany({ where: { id: { in: [...ids] } }, select: publicImageSelect });
+  const images: Record<string, PublicImage> = {};
+  for (const u of uploads) {
+    const img = toPublicImage(u);
+    if (img) images[u.id] = img;
+  }
+  return images;
 }
