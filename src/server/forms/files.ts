@@ -7,6 +7,7 @@ import { UserError } from "@/lib/errors";
 import { cleanName } from "@/lib/forms/clean-name";
 import type { FILE_KINDS } from "@/lib/forms/engine/schema";
 import { newStorageKey, resolveInside, visibilityRoot } from "@/lib/media/storage";
+import { deleteUploadFiles } from "@/server/media/save-image";
 
 export type FileKind = (typeof FILE_KINDS)[number];
 
@@ -86,4 +87,21 @@ export async function claimFormFiles(tx: Prisma.TransactionClient, ids: string[]
 export function privateFilePath(upload: Pick<Upload, "storageKey" | "mimeType">): string | null {
   const ext = Object.entries(KIND_BY_MIME).find(([mime]) => mime === upload.mimeType)?.[1].ext;
   return ext ? resolveInside(visibilityRoot("PRIVATE"), upload.storageKey, `file.${ext}`) : null;
+}
+
+/**
+ * Removes respondent files that were uploaded but never attached to a submission (the form was abandoned).
+ * They can no longer be claimed after CLAIM_WINDOW_MS, so anything older than twice that is dead personal data.
+ */
+export async function pruneUnclaimedFormFiles(now: Date = new Date(), limit = 50): Promise<number> {
+  const cutoff = new Date(now.getTime() - 2 * CLAIM_WINDOW_MS);
+  const stale = await db.upload.findMany({
+    where: { purpose: "FORM_FILE", formResponseId: null, createdAt: { lt: cutoff } },
+    select: { id: true, storageKey: true, visibility: true },
+    take: limit,
+  });
+  if (stale.length === 0) return 0;
+  const { count } = await db.upload.deleteMany({ where: { id: { in: stale.map((u) => u.id) }, formResponseId: null } });
+  await Promise.all(stale.map((u) => deleteUploadFiles(u)));
+  return count;
 }

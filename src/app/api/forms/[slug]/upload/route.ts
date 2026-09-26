@@ -5,7 +5,7 @@ import { parseRequestMeta } from "@/lib/request-meta";
 import { formUploadLimiter } from "@/lib/security/limiters";
 import { isSameOrigin } from "@/lib/security/origin";
 import { parseDefinition } from "@/server/forms/definition";
-import { saveFormFile } from "@/server/forms/files";
+import { pruneUnclaimedFormFiles, saveFormFile } from "@/server/forms/files";
 
 const HARD_LIMIT = 10 * 1024 * 1024;
 
@@ -39,6 +39,8 @@ export async function POST(req: Request, ctx: RouteContext<"/api/forms/[slug]/up
       allowed: field.validation?.fileTypes?.length ? field.validation.fileTypes : ["pdf", "image", "doc"],
       maxBytes,
     });
+    // Opportunistic housekeeping: abandoned uploads are cleared a batch at a time as new ones arrive.
+    void pruneUnclaimedFormFiles().catch(() => {});
     return Response.json({ id: upload.id, name: upload.originalName, size: upload.sizeBytes }, { status: 201 });
   } catch (error) {
     if (error instanceof UserError) return Response.json({ error: error.message }, { status: 400 });
