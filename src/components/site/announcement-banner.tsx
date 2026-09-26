@@ -45,13 +45,13 @@ function getServerSnapshot(): string | null {
 /**
  * Reads the persisted dismissal key via useSyncExternalStore so the server snapshot (null) matches
  * the first client render — no hydration mismatch, and no synchronous setState in an effect body
- * (react-hooks/set-state-in-effect forbids that). `dismissedNow` is a local flag set only from the
- * dismiss click handler, so dismissal hides the banner immediately without waiting on storage events.
+ * (react-hooks/set-state-in-effect forbids that). `dismissedKey` is local state set only from the
+ * dismiss click handler (compared by key, so a new announcement is never hidden by an old dismissal), so dismissal hides the banner immediately without waiting on storage events.
  */
 export function AnnouncementBanner({ announcement }: { announcement: BannerAnnouncement }) {
   const key = dismissalKey(announcement);
   const storedKey = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-  const [dismissedNow, setDismissedNow] = useState(false);
+  const [dismissedKey, setDismissedKey] = useState<string | null>(null);
 
   const dismiss = useCallback(() => {
     try {
@@ -59,16 +59,16 @@ export function AnnouncementBanner({ announcement }: { announcement: BannerAnnou
     } catch {
       // Ignore: dismissal just won't persist across reloads.
     }
-    setDismissedNow(true);
+    setDismissedKey(key);
   }, [key]);
 
-  if (storedKey === key || dismissedNow) return null;
+  if (storedKey === key || dismissedKey === key) return null;
 
   const href = announcement.linkUrl || `/announcements/${announcement.slug}`;
   const external = Boolean(announcement.linkUrl);
 
   return (
-    <div aria-label="Announcement" className={cn("border-b px-4 py-2.5 text-sm sm:px-6 lg:px-8", TONE[announcement.priority])}>
+    <aside aria-label="Announcement" className={cn("border-b px-4 py-2.5 text-sm sm:px-6 lg:px-8", TONE[announcement.priority])}>
       <div className="mx-auto flex max-w-7xl items-center gap-3">
         <p className="min-w-0 flex-1 truncate">
           <Link href={href} target={external ? "_blank" : undefined} rel={external ? "noopener noreferrer" : undefined} className="hover:underline">
@@ -85,6 +85,6 @@ export function AnnouncementBanner({ announcement }: { announcement: BannerAnnou
           <X className="size-4" aria-hidden="true" />
         </button>
       </div>
-    </div>
+    </aside>
   );
 }
