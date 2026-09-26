@@ -1,15 +1,10 @@
 // src/components/homepage/sections/announcements.tsx
 import Link from "next/link";
-import { db } from "@/lib/db";
+import { getHomepageAnnouncements } from "@/lib/data/announcements";
 import type { SectionOfType } from "@/lib/homepage/sections/schema";
 
 export async function AnnouncementsSection({ section }: { section: SectionOfType<"announcements"> }) {
-  const rows = await db.announcement.findMany({
-    where: { status: "PUBLISHED", showOnHomepage: true, publishAt: { lte: new Date() } },
-    orderBy: [{ pinned: "desc" }, { publishAt: "desc" }],
-    take: section.content.maxItems,
-    select: { id: true, slug: true, title: true, summary: true, priority: true },
-  });
+  const rows = await getHomepageAnnouncements(section.content.maxItems);
   if (rows.length === 0) return null;
   return (
     <section id={section.anchorId} className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
