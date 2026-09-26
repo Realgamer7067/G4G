@@ -4,6 +4,7 @@ import { QUICK_ACTIONS } from "@/components/admin/quick-actions";
 import { StatusPill } from "@/components/events/status-pill";
 import { describeAction } from "@/lib/audit-labels";
 import { can, requirePagePermission } from "@/lib/auth/guard";
+import { getVisibleAnnouncements } from "@/lib/data/announcements";
 import { db } from "@/lib/db";
 import { loadPageSettings } from "@/lib/data/pages";
 import { loadSiteSettings } from "@/lib/data/site";
@@ -53,9 +54,10 @@ export default async function DashboardPage() {
   const canLogs = can(user, "logs.view");
   const canAdmins = can(user, "admins.manage");
   const canEvents = can(user, "events.edit") || can(user, "events.publish") || can(user, "events.create");
+  const canAnnouncements = can(user, "announcements.manage");
   const now = new Date();
 
-  const [activeAdmins, pendingInvites, pages, recent, upcoming, drafts, { timezone }] = await Promise.all([
+  const [activeAdmins, pendingInvites, pages, recent, upcoming, drafts, { timezone }, liveAnnouncements] = await Promise.all([
     db.adminUser.count({ where: { isActive: true } }),
     canAdmins ? db.invite.count({ where: { acceptedAt: null, revokedAt: null, expiresAt: { gt: now } } }) : Promise.resolve(0),
     loadPageSettings(),
@@ -65,6 +67,7 @@ export default async function DashboardPage() {
       : Promise.resolve([]),
     canEvents ? db.event.findMany({ where: { lifecycle: "DRAFT" }, orderBy: { updatedAt: "desc" }, take: 5 }) : Promise.resolve([]),
     loadSiteSettings(),
+    canAnnouncements ? getVisibleAnnouncements(now) : Promise.resolve([]),
   ]);
   const livePages = pages.filter((p) => isPageLive(p)).length;
   const actions = QUICK_ACTIONS.filter((a) => can(user, a.permission));
@@ -161,6 +164,27 @@ export default async function DashboardPage() {
             )}
           </Card>
         </div>
+      )}
+
+      {canAnnouncements && (
+        <Card title="Live announcements" href="/admin/announcements" linkLabel="Manage">
+          {liveAnnouncements.length === 0 ? (
+            <p className="text-sm text-muted">
+              Nothing live right now. <Link href="/admin/announcements/new" className="text-leaf hover:underline">Post one</Link>
+            </p>
+          ) : (
+            <ul className="grid gap-3 sm:grid-cols-2">
+              {liveAnnouncements.slice(0, 4).map((a) => (
+                <li key={a.id}>
+                  <Link href={`/admin/announcements/${a.id}`} className="grid gap-0.5 rounded-xl p-2 -m-2 hover:bg-raised/50">
+                    <span className="truncate font-medium">{a.title}</span>
+                    {a.summary && <span className="truncate text-xs text-muted">{a.summary}</span>}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
       )}
 
       <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
