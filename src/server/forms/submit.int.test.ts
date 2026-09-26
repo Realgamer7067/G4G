@@ -89,6 +89,28 @@ describe("submitFormResponse", () => {
     expect(await submit(once, { ...validAnswers, email: "PRIYA@example.edu" })).toMatchObject({ ok: false, error: "You've already responded with this email address." });
   });
 
+  // Meaningful only against a real multi-connection PostgreSQL (prisma dev serializes everything); see docs/deployment.md.
+  it("never overfills a capped form or event under concurrent submissions", async () => {
+    const parallel = (count: number, send: (i: number) => ReturnType<typeof submit>) => Promise.all(Array.from({ length: count }, (_, i) => send(i)));
+    const asVisitor = (i: number) => ({ meta: { ip: `10.77.${ipCounter}.${i}`, userAgent: "vitest" } });
+
+    const capped = await publishedForm({ maxResponses: 3 });
+    const formResults = await parallel(12, (i) => submit(capped, { ...validAnswers, email: `f${i}@example.edu` }, asVisitor(i)));
+    expect(formResults.filter((r) => r.ok)).toHaveLength(3);
+    expect(await db.formResponse.count({ where: { formId: capped.id } })).toBe(3);
+
+    const form = await publishedForm({ visibility: "EVENT_ONLY" });
+    const event = await db.event.create({
+      data: {
+        slug: `race-${ipCounter}`, title: "Race", lifecycle: "PUBLISHED", registrationMode: "FORM", formId: form.id, maxParticipants: 2,
+        startAt: new Date(now.getTime() + 86_400_000), endAt: new Date(now.getTime() + 90_000_000),
+      },
+    });
+    const eventResults = await parallel(10, (i) => submit(form, { ...validAnswers, email: `e${i}@example.edu` }, { eventSlug: event.slug, ...asVisitor(i) }));
+    expect(eventResults.filter((r) => r.ok)).toHaveLength(2);
+    expect(await db.formResponse.count({ where: { eventId: event.id } })).toBe(2);
+  });
+
   it("applies event registration rules and links the response to the event", async () => {
     const form = await publishedForm({ visibility: "EVENT_ONLY" });
     const event = await db.event.create({
