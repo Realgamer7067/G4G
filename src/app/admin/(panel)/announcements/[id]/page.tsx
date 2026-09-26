@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Panel } from "@/components/admin/page-header";
+import { announcementAdminStatus } from "@/lib/announcements/visibility";
 import { requirePagePermission } from "@/lib/auth/guard";
 import { loadSiteSettings } from "@/lib/data/site";
 import { db } from "@/lib/db";
@@ -19,6 +20,7 @@ export default async function EditAnnouncementPage({ params, searchParams }: Pag
   const announcement = await db.announcement.findUnique({ where: { id } });
   if (!announcement) notFound();
   const { timezone } = await loadSiteSettings();
+  const adminStatus = announcementAdminStatus(announcement, new Date());
 
   return (
     <div className="grid max-w-3xl gap-8">
@@ -27,7 +29,7 @@ export default async function EditAnnouncementPage({ params, searchParams }: Pag
       </Link>
       <header className="grid gap-4">
         <h1 className="font-display text-3xl font-extrabold tracking-tight sm:text-4xl">{announcement.title}</h1>
-        <AnnouncementStatusBar id={announcement.id} status={announcement.status} publicUrl={announcement.status === "PUBLISHED" ? `/announcements/${announcement.slug}` : null} />
+        <AnnouncementStatusBar id={announcement.id} adminStatus={adminStatus} publicUrl={`/announcements/${announcement.slug}`} />
       </header>
       {sp.created && (
         <p role="status" className="rounded-xl border border-leaf/30 bg-leaf/5 p-3 text-sm text-leaf">

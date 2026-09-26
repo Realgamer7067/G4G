@@ -1,7 +1,7 @@
 // src/lib/data/announcements.ts
 import "server-only";
 import { unstable_cache } from "next/cache";
-import { isAnnouncementVisible, selectBannerAnnouncement } from "@/lib/announcements/visibility";
+import { isAnnouncementVisible, selectBannerAnnouncement, type BannerAnnouncement } from "@/lib/announcements/visibility";
 import { TAGS } from "@/lib/cache-tags";
 import { getPageSetting } from "@/lib/data/pages";
 import { db } from "@/lib/db";
@@ -62,7 +62,16 @@ export const getPublishedAnnouncements = unstable_cache(loadPublishedAnnouncemen
 /** PUBLISHED rows currently inside their publishAt/expiresAt window. */
 export async function getVisibleAnnouncements(now: Date = new Date()): Promise<AnnouncementDTO[]> {
   const rows = await getPublishedAnnouncements();
-  return rows.filter((a) => isAnnouncementVisible({ status: "PUBLISHED", publishAt: new Date(a.publishAt), expiresAt: a.expiresAt ? new Date(a.expiresAt) : null }, now));
+  return rows.filter((a) =>
+    isAnnouncementVisible(
+      {
+        status: "PUBLISHED",
+        publishAt: new Date(a.publishAt),
+        expiresAt: a.expiresAt ? new Date(a.expiresAt) : null,
+      },
+      now,
+    ),
+  );
 }
 
 export async function getPublicAnnouncement(slug: string): Promise<AnnouncementDTO | null> {
@@ -71,16 +80,27 @@ export async function getPublicAnnouncement(slug: string): Promise<AnnouncementD
 }
 
 export async function getHomepageAnnouncements(maxItems: number): Promise<AnnouncementDTO[]> {
+  const page = await getPageSetting("ANNOUNCEMENTS");
+  if (!page || !isPageLive(page)) return [];
   const rows = await getVisibleAnnouncements();
   return rows.filter((a) => a.showOnHomepage).slice(0, maxItems);
 }
 
 /** Highest-priority visible banner announcement, or null when Announcements is disabled or none qualify. */
-export async function getBannerAnnouncement(now: Date = new Date()): Promise<AnnouncementDTO | null> {
+export async function getBannerAnnouncement(now: Date = new Date()): Promise<BannerAnnouncement | null> {
   const page = await getPageSetting("ANNOUNCEMENTS");
   if (!page || !isPageLive(page)) return null;
   const rows = await getVisibleAnnouncements(now);
-  const candidates = rows.map((a) => ({ ...a, status: "PUBLISHED" as const, publishAt: new Date(a.publishAt), expiresAt: a.expiresAt ? new Date(a.expiresAt) : null, updatedAt: new Date(a.updatedAt) }));
+  const candidates = rows.map((a) => ({
+    ...a,
+    status: "PUBLISHED" as const,
+    publishAt: new Date(a.publishAt),
+    expiresAt: a.expiresAt ? new Date(a.expiresAt) : null,
+    updatedAt: new Date(a.updatedAt),
+  }));
   const winner = selectBannerAnnouncement(candidates, now);
-  return winner ? (rows.find((a) => a.id === winner.id) ?? null) : null;
+  const row = winner ? rows.find((a) => a.id === winner.id) : undefined;
+  if (!row) return null;
+  const { id, slug, title, summary, priority, linkUrl, linkLabel, updatedAt } = row;
+  return { id, slug, title, summary, priority, linkUrl, linkLabel, updatedAt };
 }

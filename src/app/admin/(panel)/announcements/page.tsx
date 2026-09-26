@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/admin/page-header";
 import { Input } from "@/components/ui/input";
 import type { Prisma } from "@/generated/prisma/client";
 import { ANNOUNCEMENT_PRIORITY_LABELS } from "@/lib/announcements/schema";
+import { announcementAdminStatus, type AnnouncementAdminStatus } from "@/lib/announcements/visibility";
 import { can, requirePagePermission } from "@/lib/auth/guard";
 import { db } from "@/lib/db";
 import { cn } from "@/lib/utils/cn";
@@ -13,7 +14,18 @@ export const metadata: Metadata = { title: "Announcements" };
 
 const VIEWS = ["all", "published", "draft"] as const;
 type View = (typeof VIEWS)[number];
-const VIEW_LABELS: Record<View, string> = { all: "All", published: "Published", draft: "Drafts" };
+const VIEW_LABELS: Record<View, string> = {
+  all: "All",
+  published: "Published",
+  draft: "Drafts",
+};
+
+const STATUS_TONE: Record<AnnouncementAdminStatus, string> = {
+  Published: "bg-leaf/15 text-leaf",
+  Scheduled: "bg-amber/15 text-amber",
+  Expired: "bg-danger/10 text-danger",
+  Draft: "bg-raised text-muted",
+};
 
 function whereFor(view: View): Prisma.AnnouncementWhereInput {
   if (view === "published") return { status: "PUBLISHED" };
@@ -26,13 +38,20 @@ export default async function AnnouncementsAdminPage({ searchParams }: PageProps
   const sp = await searchParams;
   const view: View = VIEWS.includes(sp.view as View) ? (sp.view as View) : "all";
   const q = (typeof sp.q === "string" ? sp.q : "").trim().slice(0, 100);
-  const where: Prisma.AnnouncementWhereInput = { AND: [whereFor(view), q ? { title: { contains: q, mode: "insensitive" } } : {}] };
+  const where: Prisma.AnnouncementWhereInput = {
+    AND: [whereFor(view), q ? { title: { contains: q, mode: "insensitive" } } : {}],
+  };
 
   const [rows, ...counts] = await Promise.all([
-    db.announcement.findMany({ where, orderBy: [{ pinned: "desc" }, { publishAt: "desc" }], take: 100 }),
+    db.announcement.findMany({
+      where,
+      orderBy: [{ pinned: "desc" }, { publishAt: "desc" }],
+      take: 100,
+    }),
     ...VIEWS.map((v) => db.announcement.count({ where: whereFor(v) })),
   ]);
 
+  const now = new Date();
   return (
     <div className="grid max-w-5xl gap-8">
       <PageHeader
@@ -82,24 +101,25 @@ export default async function AnnouncementsAdminPage({ searchParams }: PageProps
         </div>
       ) : (
         <ul className="grid gap-3">
-          {rows.map((a) => (
-            <li key={a.id}>
-              <Link href={`/admin/announcements/${a.id}`} className="flex items-center gap-4 rounded-2xl border border-line bg-surface p-4 transition-colors hover:border-leaf/30">
-                <span className="grid min-w-0 flex-1 gap-1">
-                  <span className="flex min-w-0 items-center gap-2">
-                    <span className="min-w-0 truncate font-semibold">{a.title}</span>
-                    {a.pinned && <span className="rounded-full border border-leaf/30 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em] text-leaf">Pinned</span>}
+          {rows.map((a) => {
+            const label = announcementAdminStatus(a, now);
+            return (
+              <li key={a.id}>
+                <Link href={`/admin/announcements/${a.id}`} className="flex items-center gap-4 rounded-2xl border border-line bg-surface p-4 transition-colors hover:border-leaf/30">
+                  <span className="grid min-w-0 flex-1 gap-1">
+                    <span className="flex min-w-0 items-center gap-2">
+                      <span className="min-w-0 truncate font-semibold">{a.title}</span>
+                      {a.pinned && <span className="rounded-full border border-leaf/30 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em] text-leaf">Pinned</span>}
+                    </span>
+                    <span className="truncate text-sm text-muted">{a.summary || "No summary"}</span>
                   </span>
-                  <span className="truncate text-sm text-muted">{a.summary || "No summary"}</span>
-                </span>
-                <span className={cn("shrink-0 rounded-full px-2.5 py-1 font-mono text-[11px] uppercase tracking-[0.08em]", a.status === "PUBLISHED" ? "bg-leaf/15 text-leaf" : "bg-raised text-muted")}>
-                  {a.status === "PUBLISHED" ? "Published" : "Draft"}
-                </span>
-                <span className="hidden shrink-0 font-mono text-[11px] uppercase tracking-[0.08em] text-muted sm:inline">{ANNOUNCEMENT_PRIORITY_LABELS[a.priority]}</span>
-                <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-muted" />
-              </Link>
-            </li>
-          ))}
+                  <span className={cn("shrink-0 rounded-full px-2.5 py-1 font-mono text-[11px] uppercase tracking-[0.08em]", STATUS_TONE[label])}>{label}</span>
+                  <span className="hidden shrink-0 font-mono text-[11px] uppercase tracking-[0.08em] text-muted sm:inline">{ANNOUNCEMENT_PRIORITY_LABELS[a.priority]}</span>
+                  <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-muted" />
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

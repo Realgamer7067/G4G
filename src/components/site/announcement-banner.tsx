@@ -3,21 +3,10 @@
 import { useCallback, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { X } from "lucide-react";
-import { dismissalKey } from "@/lib/announcements/visibility";
+import { dismissalKey, type BannerAnnouncement } from "@/lib/announcements/visibility";
 import { cn } from "@/lib/utils/cn";
 
 const STORAGE_KEY = "gfg-dismissed-announcement";
-
-export type BannerAnnouncement = {
-  id: string;
-  slug: string;
-  title: string;
-  summary: string;
-  priority: "NORMAL" | "IMPORTANT" | "URGENT";
-  linkUrl: string | null;
-  linkLabel: string | null;
-  updatedAt: string;
-};
 
 const TONE: Record<BannerAnnouncement["priority"], string> = {
   NORMAL: "border-line bg-surface",
@@ -76,12 +65,7 @@ export function AnnouncementBanner({ announcement }: { announcement: BannerAnnou
             {announcement.summary && <span className="text-muted"> — {announcement.summary}</span>}
           </Link>
         </p>
-        <button
-          type="button"
-          aria-label="Dismiss announcement"
-          onClick={dismiss}
-          className="shrink-0 rounded-md p-1 text-muted hover:bg-raised hover:text-frost"
-        >
+        <button type="button" aria-label="Dismiss announcement" onClick={dismiss} className="shrink-0 rounded-md p-1 text-muted hover:bg-raised hover:text-frost">
           <X className="size-4" aria-hidden="true" />
         </button>
       </div>

@@ -33,23 +33,51 @@ describe("announcement actions", () => {
     await signIn({ permissions: ["announcements.manage"] });
     const created = await saveAnnouncementAction(
       undefined,
-      formOf({ title: "Registrations open", summary: "Sign up now", publishAt: "2026-01-01T09:00", priority: "URGENT", showOnHomepage: "on", showAsBanner: "on" }),
+      formOf({
+        title: "Registrations open",
+        summary: "Sign up now",
+        publishAt: "2026-01-01T09:00",
+        priority: "URGENT",
+        showOnHomepage: "on",
+        showAsBanner: "on",
+      }),
     ).catch((e: Error) => e);
     const id = /REDIRECT:\/admin\/announcements\/([^?]+)\?created=1/.exec(String((created as Error).message))?.[1];
     const row = await db.announcement.findUniqueOrThrow({ where: { id } });
-    expect(row).toMatchObject({ title: "Registrations open", status: "DRAFT", priority: "URGENT", showOnHomepage: true, showAsBanner: true });
+    expect(row).toMatchObject({
+      title: "Registrations open",
+      status: "DRAFT",
+      priority: "URGENT",
+      showOnHomepage: true,
+      showAsBanner: true,
+    });
     expect(row.slug).toBe("registrations-open");
 
     expect(await setAnnouncementStatusAction(undefined, formOf({ id: id!, to: "PUBLISHED" }))).toEqual({ ok: true, data: null });
     expect((await db.announcement.findUniqueOrThrow({ where: { id } })).status).toBe("PUBLISHED");
-    expect(cache.revalidateTag).toHaveBeenCalledWith("announcements", { expire: 0 });
+    expect(cache.revalidateTag).toHaveBeenCalledWith("announcements", {
+      expire: 0,
+    });
 
-    expect(await setAnnouncementStatusAction(undefined, formOf({ id: id!, to: "PUBLISHED" }))).toMatchObject({ ok: false, error: "That announcement is already in that state." });
+    expect(await setAnnouncementStatusAction(undefined, formOf({ id: id!, to: "PUBLISHED" }))).toMatchObject({
+      ok: false,
+      error: "That announcement is already in that state.",
+    });
 
     expect(await setAnnouncementStatusAction(undefined, formOf({ id: id!, to: "DRAFT" }))).toEqual({ ok: true, data: null });
     expect((await db.announcement.findUniqueOrThrow({ where: { id } })).status).toBe("DRAFT");
 
-    expect(await saveAnnouncementAction(undefined, formOf({ id: id!, title: "Registrations open", publishAt: "2026-01-01T09:00", priority: "NORMAL" }))).toEqual({
+    expect(
+      await saveAnnouncementAction(
+        undefined,
+        formOf({
+          id: id!,
+          title: "Registrations open",
+          publishAt: "2026-01-01T09:00",
+          priority: "NORMAL",
+        }),
+      ),
+    ).toEqual({
       ok: true,
       data: { id },
     });
@@ -57,14 +85,98 @@ describe("announcement actions", () => {
 
     await expect(deleteAnnouncementAction(undefined, formOf({ id: id! }))).rejects.toThrow("REDIRECT:/admin/announcements?deleted=1");
     expect(await db.announcement.count()).toBe(0);
-    expect(await db.auditLog.count({ where: { action: { startsWith: "announcement." } } })).toBe(5);
+    expect(
+      await db.auditLog.count({
+        where: { action: { startsWith: "announcement." } },
+      }),
+    ).toBe(5);
   });
 
   it("rejects an expiry before the publish date", async () => {
     await signIn({ permissions: ["announcements.manage"] });
-    expect(await saveAnnouncementAction(undefined, formOf({ title: "X", publishAt: "2026-06-01T09:00", expiresAt: "2026-05-01T09:00" }))).toMatchObject({
+    expect(
+      await saveAnnouncementAction(
+        undefined,
+        formOf({
+          title: "X",
+          publishAt: "2026-06-01T09:00",
+          expiresAt: "2026-05-01T09:00",
+        }),
+      ),
+    ).toMatchObject({
       ok: false,
       fieldErrors: { expiresAt: ["Must be after the publish date."] },
     });
+  });
+
+  it("reject status changes and deletes without announcements.manage", async () => {
+    await signIn({ permissions: ["announcements.manage"] });
+    const created = await saveAnnouncementAction(undefined, formOf({ title: "Guarded", publishAt: "2026-01-01T09:00" })).catch((e: Error) => e);
+    const id = /REDIRECT:\/admin\/announcements\/([^?]+)\?created=1/.exec(String((created as Error).message))?.[1] ?? "";
+
+    await signIn({ permissions: ["events.edit"] });
+    const denied = {
+      ok: false,
+      error: "You don't have permission to do that.",
+    };
+    expect(await setAnnouncementStatusAction(undefined, formOf({ id, to: "PUBLISHED" }))).toEqual(denied);
+    expect(await deleteAnnouncementAction(undefined, formOf({ id }))).toEqual(denied);
+    expect(await db.announcement.findUniqueOrThrow({ where: { id } })).toMatchObject({ status: "DRAFT", title: "Guarded" });
+
+    await signIn({ permissions: ["announcements.manage"] });
+    await expect(deleteAnnouncementAction(undefined, formOf({ id }))).rejects.toThrow("REDIRECT:/admin/announcements?deleted=1");
+  });
+
+  it("stores content sanitized", async () => {
+    await signIn({ permissions: ["announcements.manage"] });
+    await saveAnnouncementAction(
+      undefined,
+      formOf({
+        title: "Sanitize me",
+        publishAt: "2026-01-01T09:00",
+        content: "<script>alert(1)</script><p>ok</p>",
+      }),
+    ).catch(() => undefined);
+    const row = await db.announcement.findFirstOrThrow({
+      where: { title: "Sanitize me" },
+    });
+    expect(row.content).not.toContain("<script");
+    expect(row.content).toContain("ok");
+    await db.announcement.deleteMany();
+  });
+
+  it.each(["javascript:alert(1)", "ftp://x.y/z"])("rejects link URL %s and creates no row", async (linkUrl) => {
+    await signIn({ permissions: ["announcements.manage"] });
+    const res = await saveAnnouncementAction(undefined, formOf({ title: "Bad link", publishAt: "2026-01-01T09:00", linkUrl }));
+    expect(res).toMatchObject({ ok: false });
+    expect((res as { fieldErrors?: Record<string, string[]> }).fieldErrors?.linkUrl?.length).toBeGreaterThan(0);
+    expect(await db.announcement.count()).toBe(0);
+  });
+
+  it("gives duplicate titles distinct slugs and keeps a row's own slug on re-save", async () => {
+    await signIn({ permissions: ["announcements.manage"] });
+    const idOf = (r: unknown) => /REDIRECT:\/admin\/announcements\/([^?]+)\?created=1/.exec(String((r as Error).message))![1];
+    const first = idOf(await saveAnnouncementAction(undefined, formOf({ title: "Same title", publishAt: "2026-01-01T09:00" })).catch((e: Error) => e));
+    const second = idOf(await saveAnnouncementAction(undefined, formOf({ title: "Same title", publishAt: "2026-01-01T09:00" })).catch((e: Error) => e));
+    const a = await db.announcement.findUniqueOrThrow({ where: { id: first } });
+    const b = await db.announcement.findUniqueOrThrow({
+      where: { id: second },
+    });
+    expect(a.slug).toBe("same-title");
+    expect(b.slug).not.toBe(a.slug);
+    expect(b.slug.startsWith(a.slug)).toBe(true);
+
+    await saveAnnouncementAction(
+      undefined,
+      formOf({
+        id: second,
+        title: "Same title",
+        slug: b.slug,
+        publishAt: "2026-01-01T09:00",
+      }),
+    );
+    expect((await db.announcement.findUniqueOrThrow({ where: { id: second } })).slug).toBe(b.slug);
+    await saveAnnouncementAction(undefined, formOf({ id: first, title: "Same title", publishAt: "2026-01-01T09:00" }));
+    expect((await db.announcement.findUniqueOrThrow({ where: { id: first } })).slug).toBe("same-title");
   });
 });

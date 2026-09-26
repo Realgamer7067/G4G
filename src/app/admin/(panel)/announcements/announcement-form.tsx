@@ -41,7 +41,13 @@ export function AnnouncementForm({ values, timezone }: { values: AnnouncementFor
           <Field label="Title" htmlFor="title" error={err("title")} className="sm:col-span-2">
             <Input id="title" name="title" defaultValue={values.title} maxLength={160} required {...describedBy("title", err("title"))} />
           </Field>
-          <Field label="Page address" htmlFor="slug" error={err("slug")} hint="Leave blank to generate one from the title." className="sm:col-span-2">
+          <Field
+            label="Page address"
+            htmlFor="slug"
+            error={err("slug")}
+            hint={values.id ? "Leave blank to generate one from the title. Changing this breaks links already shared." : "Leave blank to generate one from the title."}
+            className="sm:col-span-2"
+          >
             <div className="flex items-center overflow-hidden rounded-lg border border-line bg-night focus-within:border-leaf">
               <span className="pl-3 font-mono text-xs text-muted">/announcements/</span>
               <input id="slug" name="slug" defaultValue={values.slug} maxLength={80} className="h-10 min-w-0 flex-1 bg-transparent pr-3 font-mono text-sm text-frost focus:outline-none" />

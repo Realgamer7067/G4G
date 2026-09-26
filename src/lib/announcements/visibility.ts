@@ -13,6 +13,27 @@ export function isAnnouncementVisible(a: AnnouncementVisibilityInput, now: Date)
 
 export type AnnouncementPriority = "NORMAL" | "IMPORTANT" | "URGENT";
 
+/** The only fields the client banner receives; keep narrow so page bodies never ride along in the RSC payload. */
+export type BannerAnnouncement = {
+  id: string;
+  slug: string;
+  title: string;
+  summary: string;
+  priority: AnnouncementPriority;
+  linkUrl: string | null;
+  linkLabel: string | null;
+  updatedAt: string;
+};
+
+export type AnnouncementAdminStatus = "Draft" | "Published" | "Scheduled" | "Expired";
+
+/** Admin-facing label: Published only while the announcement is actually visible on the site. */
+export function announcementAdminStatus(a: AnnouncementVisibilityInput, now: Date): AnnouncementAdminStatus {
+  if (a.status === "DRAFT") return "Draft";
+  if (isAnnouncementVisible(a, now)) return "Published";
+  return a.publishAt > now ? "Scheduled" : "Expired";
+}
+
 export type BannerCandidate = AnnouncementVisibilityInput & {
   id: string;
   priority: AnnouncementPriority;
@@ -20,7 +41,11 @@ export type BannerCandidate = AnnouncementVisibilityInput & {
   updatedAt: Date;
 };
 
-const PRIORITY_RANK: Record<AnnouncementPriority, number> = { URGENT: 3, IMPORTANT: 2, NORMAL: 1 };
+const PRIORITY_RANK: Record<AnnouncementPriority, number> = {
+  URGENT: 3,
+  IMPORTANT: 2,
+  NORMAL: 1,
+};
 
 /** Highest-priority visible banner announcement; ties broken by the most recently published. */
 export function selectBannerAnnouncement<T extends BannerCandidate>(rows: readonly T[], now: Date): T | null {
