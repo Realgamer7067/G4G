@@ -8,7 +8,8 @@ export function AchievementsSection({ section, images }: { section: SectionOfTyp
   if (c.items.length === 0) return null;
   return (
     <section id={section.anchorId} className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-      {section.headingOverride && <h2 className="mb-8 text-center font-display text-3xl font-bold">{section.headingOverride}</h2>}
+      {/* Always an h2 (visually hidden without an override) so the item h3s never skip a level. */}
+      <h2 className={section.headingOverride ? "mb-8 text-center font-display text-3xl font-bold" : "sr-only"}>{section.headingOverride || "Achievements"}</h2>
       <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {c.items
           .slice()
@@ -23,7 +24,7 @@ export function AchievementsSection({ section, images }: { section: SectionOfTyp
               {item.description && <p className="text-sm text-muted">{item.description}</p>}
               {item.link && (
                 <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-sm text-leaf hover:underline">
-                  Learn more
+                  Learn more<span className="sr-only"> about {item.title}</span>
                 </a>
               )}
             </li>

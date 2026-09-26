@@ -13,7 +13,7 @@ export async function SponsorsSection({ section }: { section: SectionOfType<"spo
       <ul className="flex flex-wrap items-center justify-center gap-8">
         {sponsors.map((s) => (
           <li key={s.id} className="grid h-16 place-items-center rounded-xl bg-tile px-6">
-            {s.logo ? <Picture image={s.logo} sizes="160px" alt={s.name} imgClassName="max-h-10 w-auto object-contain" /> : <span className="font-semibold">{s.name}</span>}
+            {s.logo ? <Picture image={s.logo} sizes="160px" alt={s.name} imgClassName="max-h-10 w-auto object-contain" /> : <span className="font-semibold text-night">{s.name}</span>}
           </li>
         ))}
       </ul>
