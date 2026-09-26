@@ -49,7 +49,6 @@ export default async function EditTeamMemberPage({ params, searchParams }: PageP
           bio: member.bio,
           links,
           featured: member.featured,
-          order: member.order,
         }}
       />
       <Panel title="Delete member">

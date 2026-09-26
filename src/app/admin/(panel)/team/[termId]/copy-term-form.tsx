@@ -15,11 +15,6 @@ export function CopyTermForm({ termId }: { termId: string }) {
       <Button type="submit" variant="secondary" size="sm" disabled={pending} className="w-fit">
         <Copy className="size-4" aria-hidden="true" /> Copy members from previous term
       </Button>
-      {state?.ok && (
-        <FormMessage tone="success">
-          Copied {state.data.copied} member{state.data.copied === 1 ? "" : "s"}.
-        </FormMessage>
-      )}
       {state && !state.ok && <FormMessage>{state.error}</FormMessage>}
     </form>
   );

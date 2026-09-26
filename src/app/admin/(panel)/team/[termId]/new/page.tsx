@@ -36,7 +36,6 @@ export default async function NewTeamMemberPage({ params }: PageProps<"/admin/te
           bio: "",
           links: { linkedin: "", github: "", instagram: "", website: "", x: "" },
           featured: false,
-          order: 0,
         }}
       />
     </div>

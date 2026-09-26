@@ -24,7 +24,6 @@ export type MemberValues = {
   bio: string;
   links: { linkedin: string; github: string; instagram: string; website: string; x: string };
   featured: boolean;
-  order: number;
 };
 
 export function MemberForm({
@@ -68,9 +67,6 @@ export function MemberForm({
                 </option>
               ))}
             </Select>
-          </Field>
-          <Field label="Sort order" htmlFor="order" error={err("order")} hint="Lower numbers appear first within their group.">
-            <Input id="order" name="order" type="number" min={0} defaultValue={values.order} />
           </Field>
           <Field label="Bio" htmlFor="bio" error={err("bio")} className="sm:col-span-2">
             <Textarea id="bio" name="bio" rows={3} defaultValue={values.bio} maxLength={600} />
