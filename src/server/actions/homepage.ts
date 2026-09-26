@@ -10,6 +10,7 @@ import { TAGS, invalidate } from "@/lib/cache-tags";
 import { db } from "@/lib/db";
 import { UserError } from "@/lib/errors";
 import { homepageSectionsSchema, type HomepageSections } from "@/lib/homepage/sections/schema";
+import { imageUrl, toPublicImage } from "@/lib/media/public-image";
 import { getRequestMeta } from "@/lib/request-meta";
 
 const actorOf = (u: SessionUser) => ({ id: u.id, name: u.name });
@@ -69,5 +70,32 @@ export async function restoreHomepageRevisionAction(revisionId: string, historyI
     });
     revalidatePath("/admin/homepage");
     return { sections };
+  });
+}
+
+export async function updateHomepageImageAltAction(uploadId: string, alt: string): Promise<ActionResult> {
+  return runAction(async () => {
+    await requirePermission("homepage.edit");
+    const { count } = await db.upload.updateMany({ where: { id: uploadId, kind: "IMAGE", visibility: "PUBLIC", purpose: { in: ["GENERIC", "GALLERY"] } }, data: { alt: alt.trim().slice(0, 300) } });
+    if (!count) throw new UserError("That image is no longer available.");
+    return null;
+  });
+}
+
+export async function listImageLibraryAction(): Promise<ActionResult<{ id: string; url: string; alt: string }[]>> {
+  return runAction(async () => {
+    await requirePermission("homepage.edit");
+    const uploads = await db.upload.findMany({
+      where: { kind: "IMAGE", visibility: "PUBLIC", purpose: { in: ["GENERIC", "GALLERY"] } },
+      orderBy: { createdAt: "desc" },
+      take: 60,
+      select: { id: true, alt: true, storageKey: true, width: true, height: true, blurDataUrl: true, variants: true, visibility: true },
+    });
+    return uploads
+      .map((u) => {
+        const image = toPublicImage(u);
+        return image ? { id: u.id, url: imageUrl(image, 320), alt: u.alt } : null;
+      })
+      .filter((i): i is { id: string; url: string; alt: string } => i !== null);
   });
 }
