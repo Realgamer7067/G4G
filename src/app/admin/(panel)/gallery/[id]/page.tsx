@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PageHeader, Panel } from "@/components/admin/page-header";
-import { requirePagePermission } from "@/lib/auth/guard";
+import { can, requirePagePermission } from "@/lib/auth/guard";
 import { db } from "@/lib/db";
 import { formatAlbumDate } from "@/lib/gallery/schema";
 import { AlbumForm, BackToGallery, DeleteAlbumForm } from "../album-form";
+import { BulkUpload } from "../bulk-upload";
 
 export const metadata: Metadata = { title: "Edit album" };
 
 export default async function EditAlbumPage({ params, searchParams }: PageProps<"/admin/gallery/[id]">) {
-  await requirePagePermission("gallery.manage");
+  const user = await requirePagePermission("gallery.manage");
   const { id } = await params;
   const sp = await searchParams;
   const [album, events] = await Promise.all([
@@ -38,6 +39,9 @@ export default async function EditAlbumPage({ params, searchParams }: PageProps<
         }}
         events={events}
       />
+      <Panel title="Add photos" description="Upload one or more photos to this album.">
+        {can(user, "media.upload") ? <BulkUpload albumId={album.id} /> : <p className="text-sm text-muted">You need the media upload permission to add photos.</p>}
+      </Panel>
       <Panel title="Delete album" description="Removes the album and every photo in it.">
         <DeleteAlbumForm id={album.id} imageCount={album._count.images} />
       </Panel>
