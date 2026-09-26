@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import type { PageKey } from "@/generated/prisma/enums";
 import { getVisibleAnnouncements } from "@/lib/data/announcements";
 import { getPublicEvents } from "@/lib/data/events";
+import { getPublicAlbums } from "@/lib/data/gallery";
 import { getPageSettings } from "@/lib/data/pages";
 import { getTeamArchive } from "@/lib/data/team";
 import { PAGE_ROUTES, isPageLive } from "@/lib/pages/registry";
@@ -31,6 +32,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (live("TEAM")) {
     for (const t of await getTeamArchive()) {
       entries.push({ url: `${base}/team/${t.startYear}`, changeFrequency: "yearly", priority: 0.4 });
+    }
+  }
+  if (live("GALLERY")) {
+    for (const a of await getPublicAlbums()) {
+      entries.push({ url: `${base}/gallery/${a.slug}`, changeFrequency: "monthly", priority: 0.5 });
     }
   }
   return entries;
