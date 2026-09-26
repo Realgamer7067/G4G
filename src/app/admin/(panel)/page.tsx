@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { QUICK_ACTIONS } from "@/components/admin/quick-actions";
 import { StatusPill } from "@/components/events/status-pill";
+import { dailySeries, lastDays, topPaths } from "@/lib/analytics/summary";
 import { describeAction } from "@/lib/audit-labels";
 import { can, requirePagePermission } from "@/lib/auth/guard";
 import { getVisibleAnnouncements } from "@/lib/data/announcements";
@@ -12,6 +13,7 @@ import { formatEventWhen } from "@/lib/events/format";
 import { deriveEventStatus } from "@/lib/events/status";
 import { isPageLive } from "@/lib/pages/registry";
 import { PERMISSIONS } from "@/lib/rbac/permissions";
+import { formatInZone, zonedDay } from "@/lib/utils/timezone";
 import { timeAgo } from "@/lib/utils/time";
 
 function Stat({ label, value, href }: { label: string; value: string | number; href?: string }) {
@@ -70,6 +72,12 @@ export default async function DashboardPage() {
     canAnnouncements ? getVisibleAnnouncements(now) : Promise.resolve([]),
   ]);
   const livePages = pages.filter((p) => isPageLive(p)).length;
+  const viewDays = lastDays(zonedDay(now, timezone), 7);
+  const viewRows = await db.dailyPageView.findMany({ where: { date: { gte: new Date(`${viewDays[0]}T00:00:00Z`) } }, select: { date: true, path: true, views: true } });
+  const viewSeries = dailySeries(viewRows, viewDays);
+  const viewTotal = viewSeries.reduce((n, d) => n + d.views, 0);
+  const viewPeak = Math.max(1, ...viewSeries.map((d) => d.views));
+  const viewTop = topPaths(viewRows, 5);
   const actions = QUICK_ACTIONS.filter((a) => can(user, a.permission));
 
   const groups = new Map<string, string[]>();
@@ -125,6 +133,45 @@ export default async function DashboardPage() {
         {canEvents ? <Stat label="Draft events" value={drafts.length} href="/admin/events?view=drafts" /> : canAdmins && <Stat label="Pending invites" value={pendingInvites} href="/admin/users" />}
         <Stat label={`of ${pages.length} pages live`} value={livePages} href={can(user, "pages.manage") ? "/admin/pages" : undefined} />
       </section>
+
+      <Card title="Page views, last 7 days">
+        <div className="grid gap-5 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+          <div className="grid gap-3">
+            <p>
+              <span className="font-display text-3xl font-extrabold tabular-nums">{viewTotal.toLocaleString("en-IN")}</span> <span className="text-sm text-muted">views</span>
+            </p>
+            <ol className="grid h-28 grid-cols-7 items-end gap-1.5" aria-label="Views per day">
+              {viewSeries.map((d) => (
+                <li key={d.day} className="grid h-full grid-rows-[1fr_auto] gap-1 text-center">
+                  <span className="flex items-end" aria-hidden="true">
+                    <span className="w-full rounded-t bg-leaf/70" style={{ height: `${Math.max(d.views ? 4 : 0, Math.round((d.views / viewPeak) * 100))}%` }} />
+                  </span>
+                  <span className="text-[10px] text-muted">
+                    <span className="sr-only">{formatInZone(`${d.day}T12:00:00Z`, "UTC", { weekday: "long", day: "numeric", month: "short" })}: {d.views} views</span>
+                    <span aria-hidden="true">{formatInZone(`${d.day}T12:00:00Z`, "UTC", { weekday: "narrow" })}</span>
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </div>
+          <div className="grid content-start gap-2">
+            <h3 className="font-mono text-[11px] uppercase tracking-[0.1em] text-muted">Top pages</h3>
+            {viewTop.length === 0 ? (
+              <p className="text-sm text-muted">No visits recorded yet.</p>
+            ) : (
+              <ul className="grid gap-1.5 text-sm">
+                {viewTop.map((t) => (
+                  <li key={t.path} className="flex min-w-0 items-center justify-between gap-3">
+                    <span className="min-w-0 truncate font-mono text-xs">{t.path}</span>
+                    <span className="shrink-0 tabular-nums text-muted">{t.views.toLocaleString("en-IN")}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+        <p className="text-xs text-muted">Counted without cookies or personal data. Obvious bots are skipped.</p>
+      </Card>
 
       {canEvents && (
         <div className="grid gap-6 lg:grid-cols-2">

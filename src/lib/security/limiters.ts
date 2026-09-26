@@ -17,3 +17,5 @@ export const formSubmitLimiter = createRateLimiter({ limit: 10, windowMs: 60_000
 export const formUploadLimiter = createRateLimiter({ limit: 20, windowMs: 60_000 });
 /** Per IP: 60 analytics beacons per minute. */
 export const beaconLimiter = createRateLimiter({ limit: 60, windowMs: 60_000 });
+/** Per IP: 120 page-view beacons per minute (a few per page load, with generous headroom for fast navigation). */
+export const pageViewLimiter = createRateLimiter({ limit: 120, windowMs: 60_000 });

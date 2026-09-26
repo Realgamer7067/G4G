@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AnnouncementBanner } from "@/components/site/announcement-banner";
+import { PageViewBeacon } from "@/components/site/page-view-beacon";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
 import { getBannerAnnouncement } from "@/lib/data/announcements";
@@ -43,6 +44,7 @@ export default async function SiteLayout({ children }: LayoutProps<"/">) {
         {children}
       </main>
       <SiteFooter settings={settings} nav={nav} />
+      <PageViewBeacon />
     </div>
   );
 }
