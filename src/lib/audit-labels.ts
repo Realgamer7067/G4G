@@ -65,6 +65,17 @@ const LABELS: Record<string, string> = {
   "team.member_deleted": "Removed a team member",
   "team.member_moved": "Reordered team members",
   "team.member_copied": "Copied team members from a previous term",
+  "gallery.album_created": "Created a gallery album",
+  "gallery.album_updated": "Edited a gallery album",
+  "gallery.album_deleted": "Deleted a gallery album",
+  "gallery.album_published": "Published a gallery album",
+  "gallery.album_unpublished": "Unpublished a gallery album",
+  "gallery.album_reordered": "Reordered gallery albums",
+  "gallery.cover_set": "Set a gallery album's cover photo",
+  "gallery.images_added": "Added photos to a gallery album",
+  "gallery.image_updated": "Edited a gallery photo's caption",
+  "gallery.image_deleted": "Removed a gallery photo",
+  "gallery.images_reordered": "Reordered photos in a gallery album",
 };
 
 export const AUDIT_ACTION_FAMILIES: { value: string; label: string }[] = [
@@ -82,6 +93,7 @@ export const AUDIT_ACTION_FAMILIES: { value: string; label: string }[] = [
   { value: "category", label: "Event categories" },
   { value: "form", label: "Forms" },
   { value: "team", label: "Team" },
+  { value: "gallery", label: "Gallery" },
 ];
 
 export function registerAuditLabels(labels: Record<string, string>, families: { value: string; label: string }[] = []): void {
