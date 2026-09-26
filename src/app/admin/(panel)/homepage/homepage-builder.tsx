@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { AlertTriangle, Check, Eye, Loader2 } from "lucide-react";
 import { Panel } from "@/components/admin/page-header";
 import { Button } from "@/components/ui/button";
-import type { HomepageHistoryEntry } from "@/lib/data/homepage";
+import type { HomepageHistoryEntry, HomepageImageDTO } from "@/lib/data/homepage";
 import { blankSection } from "@/lib/homepage/sections/factories";
 import { addSection, removeSection, reorderSections, toggleSection, updateSection } from "@/lib/homepage/sections/ops";
 import type { HomepageSections, Section, SectionType } from "@/lib/homepage/sections/schema";
@@ -20,17 +20,27 @@ type SaveState = "idle" | "dirty" | "saving" | "saved" | "error";
 export function HomepageBuilder({
   revisionId,
   initialSections,
+  initialImages,
   canPublish,
   history,
 }: {
   revisionId: string;
   initialSections: HomepageSections;
+  initialImages: Record<string, HomepageImageDTO>;
   canPublish: boolean;
   history: HomepageHistoryEntry[];
 }) {
   const router = useRouter();
   const [sections, setSections] = useState(initialSections);
   const [selectedId, setSelectedId] = useState<string | null>(initialSections[0]?.id ?? null);
+  const [images, setImages] = useState(initialImages);
+  const [prevInitialImages, setPrevInitialImages] = useState(initialImages);
+  if (initialImages !== prevInitialImages) {
+    // A server refresh (e.g. after restoring a revision) can bring images the client hasn't resolved yet.
+    setPrevInitialImages(initialImages);
+    setImages((prev) => ({ ...prev, ...initialImages }));
+  }
+  const registerImage = useCallback((id: string, image: HomepageImageDTO) => setImages((prev) => ({ ...prev, [id]: image })), []);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [saveError, setSaveError] = useState<string | null>(null);
   const [publishing, setPublishing] = useState(false);
@@ -158,6 +168,7 @@ export function HomepageBuilder({
     setSelectedId(result.data.sections[0]?.id ?? null);
     setSaveState("saved");
     setRestoredNonce((n) => n + 1);
+    router.refresh();
   }
 
   const selected = sections.find((s) => s.id === selectedId) ?? null;
@@ -209,7 +220,7 @@ export function HomepageBuilder({
         </p>
       )}
 
-      <div className={cn("grid gap-4 lg:grid-cols-[320px_1fr]", restoringId !== null && "pointer-events-none opacity-60")}>
+      <div className={cn("grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[320px_minmax(0,1fr)]", restoringId !== null && "pointer-events-none opacity-60")}>
         <SectionList
           sections={sections}
           selectedId={selectedId}
@@ -229,6 +240,8 @@ export function HomepageBuilder({
         <Inspector
           section={selected}
           onUpdate={(patch: Partial<Section>) => selected && apply((s) => updateSection(s, selected.id, patch))}
+          images={images}
+          onImageResolved={registerImage}
         />
       </div>
 

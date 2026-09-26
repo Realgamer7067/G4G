@@ -3,7 +3,7 @@ import { unstable_cache } from "next/cache";
 import { TAGS } from "@/lib/cache-tags";
 import { db } from "@/lib/db";
 import { homepageSectionsSchema, type HomepageSections } from "@/lib/homepage/sections/schema";
-import { publicImageSelect, toPublicImage, type PublicImage } from "@/lib/media/public-image";
+import { imageUrl, publicImageSelect, toPublicImage, type PublicImage } from "@/lib/media/public-image";
 
 function parseSections(raw: unknown): HomepageSections {
   const parsed = homepageSectionsSchema.safeParse(raw);
@@ -63,4 +63,14 @@ export async function resolveHomepageImages(sections: HomepageSections): Promise
     if (img) images[u.id] = img;
   }
   return images;
+}
+
+export type HomepageImageDTO = { url: string; alt: string };
+
+/** `resolveHomepageImages`'s PublicImage map, flattened to what the admin picker needs. */
+export async function resolveHomepageImageUrls(sections: HomepageSections): Promise<Record<string, HomepageImageDTO>> {
+  const images = await resolveHomepageImages(sections);
+  const out: Record<string, HomepageImageDTO> = {};
+  for (const [id, img] of Object.entries(images)) out[id] = { url: imageUrl(img, 800), alt: img.alt };
+  return out;
 }

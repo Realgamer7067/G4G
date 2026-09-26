@@ -1,16 +1,28 @@
 "use client";
 
+import { ImagePicker } from "@/components/admin/image-picker";
+import type { HomepageImageDTO } from "@/lib/data/homepage";
 import { newSectionId } from "@/lib/homepage/sections/factories";
 import type { Section, SectionOfType } from "@/lib/homepage/sections/schema";
 
-export function AchievementsForm({ section, onUpdate }: { section: SectionOfType<"achievements">; onUpdate: (patch: Partial<Section>) => void }) {
+export function AchievementsForm({
+  section,
+  onUpdate,
+  images,
+  onImageResolved,
+}: {
+  section: SectionOfType<"achievements">;
+  onUpdate: (patch: Partial<Section>) => void;
+  images: Record<string, HomepageImageDTO>;
+  onImageResolved: (id: string, image: HomepageImageDTO) => void;
+}) {
   const c = section.content;
   const patchContent = (content: Partial<typeof c>) => onUpdate({ content } as Partial<Section>);
   return (
     <div className="grid gap-3">
       {c.items.map((item, i) => (
-        <div key={item.id} className="grid grid-cols-[1fr_auto] gap-1.5 rounded-lg border border-line p-2">
-          <div className="grid gap-1.5">
+        <div key={item.id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-1.5 rounded-lg border border-line p-2">
+          <div className="grid min-w-0 gap-1.5">
             <input value={item.title} onChange={(e) => patchContent({ items: c.items.map((x, j) => (j === i ? { ...x, title: e.target.value } : x)) })} placeholder="Title" className="rounded-lg border border-line bg-transparent px-2 py-1 text-sm" />
             <input
               type="number"
@@ -40,6 +52,15 @@ export function AchievementsForm({ section, onUpdate }: { section: SectionOfType
               onChange={(e) => patchContent({ items: c.items.map((x, j) => (j === i ? { ...x, link: e.target.value || undefined } : x)) })}
               placeholder="Link (optional)"
               className="rounded-lg border border-line bg-transparent px-2 py-1 text-sm"
+            />
+            <ImagePicker
+              uploadId={item.imageId}
+              url={item.imageId ? (images[item.imageId]?.url ?? null) : null}
+              alt={item.imageId ? (images[item.imageId]?.alt ?? "") : ""}
+              onChange={(uploadId, url, alt) => {
+                onImageResolved(uploadId, { url, alt });
+                patchContent({ items: c.items.map((x, j) => (j === i ? { ...x, imageId: uploadId } : x)) });
+              }}
             />
           </div>
           <button type="button" onClick={() => patchContent({ items: c.items.filter((_, j) => j !== i) })} className="self-start rounded-lg border border-line px-2 text-sm text-muted hover:text-danger">

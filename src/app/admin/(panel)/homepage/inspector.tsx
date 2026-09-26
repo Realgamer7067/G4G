@@ -1,5 +1,6 @@
 "use client";
 
+import type { HomepageImageDTO } from "@/lib/data/homepage";
 import type { Section } from "@/lib/homepage/sections/schema";
 import { AboutForm } from "./section-forms/about";
 import { AchievementsForm } from "./section-forms/achievements";
@@ -13,7 +14,17 @@ import { SocialForm } from "./section-forms/social";
 import { SponsorsForm } from "./section-forms/sponsors";
 import { StatsForm } from "./section-forms/stats";
 
-export function Inspector({ section, onUpdate }: { section: Section | null; onUpdate: (patch: Partial<Section>) => void }) {
+export function Inspector({
+  section,
+  onUpdate,
+  images,
+  onImageResolved,
+}: {
+  section: Section | null;
+  onUpdate: (patch: Partial<Section>) => void;
+  images: Record<string, HomepageImageDTO>;
+  onImageResolved: (id: string, image: HomepageImageDTO) => void;
+}) {
   if (!section) return <div className="grid place-items-center rounded-2xl border border-dashed border-line p-10 text-sm text-muted">Select a section to edit it.</div>;
 
   const common = (
@@ -41,7 +52,7 @@ export function Inspector({ section, onUpdate }: { section: Section | null; onUp
       return (
         <div className="rounded-2xl border border-line bg-surface p-4">
           {common}
-          <AboutForm section={section} onUpdate={onUpdate} />
+          <AboutForm section={section} onUpdate={onUpdate} images={images} onImageResolved={onImageResolved} />
         </div>
       );
     case "stats":
@@ -62,7 +73,7 @@ export function Inspector({ section, onUpdate }: { section: Section | null; onUp
       return (
         <div className="rounded-2xl border border-line bg-surface p-4">
           {common}
-          <AchievementsForm section={section} onUpdate={onUpdate} />
+          <AchievementsForm section={section} onUpdate={onUpdate} images={images} onImageResolved={onImageResolved} />
         </div>
       );
     case "social":
