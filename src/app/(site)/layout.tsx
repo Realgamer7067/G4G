@@ -30,7 +30,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function SiteLayout({ children }: LayoutProps<"/">) {
   const [settings, nav, banner] = await Promise.all([getSiteSettings(), getNavigation(), getBannerAnnouncement()]);
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="flex min-h-dvh flex-col overflow-x-clip">
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-leaf focus:px-3 focus:py-2 focus:text-night"
