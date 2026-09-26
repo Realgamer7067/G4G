@@ -1,4 +1,4 @@
-import { CalendarPlus, ClipboardPlus, FileStack, Handshake, LayoutTemplate, Megaphone, Settings, ShieldPlus, UserPlus, type LucideIcon } from "lucide-react";
+import { CalendarPlus, ClipboardPlus, FileStack, Handshake, LayoutTemplate, Megaphone, Settings, ShieldPlus, UserPlus, UserRoundPlus, type LucideIcon } from "lucide-react";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 
 export type QuickAction = { href: string; label: string; description: string; icon: LucideIcon; permission: PermissionKey };
@@ -10,6 +10,7 @@ export const QUICK_ACTIONS: QuickAction[] = [
   { href: "/admin/forms/new", label: "Create form", description: "Multi-page form with logic", icon: ClipboardPlus, permission: "forms.create" },
   { href: "/admin/sponsors/new", label: "Add sponsor", description: "Logo, link and partner type", icon: Handshake, permission: "sponsors.manage" },
   { href: "/admin/announcements/new", label: "Post announcement", description: "Update, deadline or news item", icon: Megaphone, permission: "announcements.manage" },
+  { href: "/admin/team", label: "Add team member", description: "Pick a term, then add someone", icon: UserRoundPlus, permission: "team.manage" },
   { href: "/admin/users", label: "Invite an admin", description: "Send a single-use invite link", icon: UserPlus, permission: "admins.manage" },
   { href: "/admin/pages", label: "Pages & menu", description: "Turn pages on or off", icon: FileStack, permission: "pages.manage" },
   { href: "/admin/settings", label: "Site settings", description: "Club details, socials, footer", icon: Settings, permission: "settings.manage" },

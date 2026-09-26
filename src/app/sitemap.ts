@@ -3,6 +3,7 @@ import type { PageKey } from "@/generated/prisma/enums";
 import { getVisibleAnnouncements } from "@/lib/data/announcements";
 import { getPublicEvents } from "@/lib/data/events";
 import { getPageSettings } from "@/lib/data/pages";
+import { getTeamArchive } from "@/lib/data/team";
 import { PAGE_ROUTES, isPageLive } from "@/lib/pages/registry";
 
 export const dynamic = "force-dynamic";
@@ -25,6 +26,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (live("ANNOUNCEMENTS")) {
     for (const a of await getVisibleAnnouncements()) {
       entries.push({ url: `${base}/announcements/${a.slug}`, lastModified: new Date(a.updatedAt), changeFrequency: "weekly", priority: 0.5 });
+    }
+  }
+  if (live("TEAM")) {
+    for (const t of await getTeamArchive()) {
+      entries.push({ url: `${base}/team/${t.startYear}`, changeFrequency: "yearly", priority: 0.4 });
     }
   }
   return entries;
