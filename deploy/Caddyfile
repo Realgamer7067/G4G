@@ -1,0 +1,13 @@
+{$DOMAIN} {
+	encode zstd gzip
+
+	# Uploads are capped at 15 MB in the app; leave headroom for multipart overhead.
+	request_body {
+		max_size 20MB
+	}
+
+	reverse_proxy app:3000 {
+		# The app rate-limits by X-Real-IP. Overwrite whatever the client sent with the real peer address.
+		header_up X-Real-IP {remote_host}
+	}
+}

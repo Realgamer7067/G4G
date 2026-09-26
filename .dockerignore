@@ -1,0 +1,17 @@
+.git
+node_modules
+.next
+data
+coverage
+playwright-report
+test-results
+.env
+.env.*
+!.env.example
+.superpowers
+.prisma-dev
+docs
+*.log
+Dockerfile
+docker-compose*.yml
+deploy

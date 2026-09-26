@@ -17,6 +17,7 @@ src/generated/
 .env
 .env.*
 !.env.example
+!deploy/.env.example
 
 # runtime data (uploads) — anchored so src/lib/data is not ignored
 /data/
@@ -33,3 +34,6 @@ test-results/
 npm-debug.log*
 .prisma-dev/
 .vercel
+
+# deployment backups (contain the database and uploads)
+/deploy/backups/
