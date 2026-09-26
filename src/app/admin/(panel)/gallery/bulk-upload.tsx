@@ -77,11 +77,12 @@ export function BulkUpload({ albumId }: { albumId: string }) {
   }
 
   function onFilesChosen(files: FileList | null) {
+    // Copy first: FileList is live and clearing the input's value empties it.
+    const chosen = Array.from(files ?? []);
     if (input.current) input.current.value = "";
-    if (!files) return;
     const next: FileItem[] = [];
     const skipped: string[] = [];
-    for (const file of Array.from(files)) {
+    for (const file of chosen) {
       if (!ACCEPT.includes(file.type) || file.size > MAX_BYTES) {
         skipped.push(file.name);
         continue;
