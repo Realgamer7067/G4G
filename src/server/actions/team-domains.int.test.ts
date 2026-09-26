@@ -46,6 +46,18 @@ describe("domain actions", () => {
     expect(await db.auditLog.count({ where: { action: { startsWith: "team.domain_" } } })).toBe(5);
   });
 
+  it("appends a new domain after the current max order even after a delete leaves gaps", async () => {
+    await signIn({ permissions: ["team.manage"] });
+    for (const name of ["Alpha", "Bravo", "Charlie"]) await saveDomainAction(undefined, formOf({ name }));
+    const alpha = await db.domain.findFirstOrThrow({ where: { name: "Alpha" } });
+    await deleteDomainAction(undefined, formOf({ id: alpha.id }));
+    expect(await saveDomainAction(undefined, formOf({ name: "Aardvark" }))).toEqual({ ok: true, data: null });
+    const rows = await db.domain.findMany({ orderBy: [{ order: "asc" }, { name: "asc" }] });
+    expect(rows.map((d) => d.name)).toEqual(["Bravo", "Charlie", "Aardvark"]);
+    expect(new Set(rows.map((d) => d.order)).size).toBe(3);
+    expect(rows[2].order).toBe(3);
+  });
+
   it("refuses to move the only domain in either direction", async () => {
     await signIn({ permissions: ["team.manage"] });
     await saveDomainAction(undefined, formOf({ name: "Solo" }));

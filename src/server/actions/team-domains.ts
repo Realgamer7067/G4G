@@ -24,7 +24,7 @@ export async function saveDomainAction(_prev: ActionResult | undefined, formData
     });
     const meta = await getRequestMeta();
     await db.$transaction(async (tx) => {
-      const order = existing ? existing.order : await tx.domain.count();
+      const order = existing ? existing.order : ((await tx.domain.aggregate({ _max: { order: true } }))._max.order ?? -1) + 1;
       const saved = existing
         ? await tx.domain.update({ where: { id: existing.id }, data: { name: input.name, slug } })
         : await tx.domain.create({ data: { name: input.name, slug, order } });

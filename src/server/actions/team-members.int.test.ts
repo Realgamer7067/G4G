@@ -145,6 +145,22 @@ describe("team member actions", () => {
     expect(ordered.map((m) => m.order)).toEqual([0, 1, 2]);
   });
 
+  it("appends a new member after the group's max order even after a delete leaves gaps", async () => {
+    await signIn({ permissions: ["team.manage"] });
+    const term = await makeTerm(2026);
+    const base = { termId: term.id, title: "Member", tier: "MEMBER", order: "0" };
+    for (const name of ["Amy", "Bob", "Cid"]) {
+      await saveTeamMemberAction(undefined, formOf({ ...base, name })).catch((e: Error) => e);
+    }
+    const amy = await db.teamMember.findFirstOrThrow({ where: { name: "Amy" } });
+    await deleteTeamMemberAction(undefined, formOf({ id: amy.id })).catch((e: Error) => e);
+    await saveTeamMemberAction(undefined, formOf({ ...base, name: "Aaron" })).catch((e: Error) => e);
+    const rows = await db.teamMember.findMany({ where: { termId: term.id }, orderBy: [{ order: "asc" }, { name: "asc" }] });
+    expect(rows.map((m) => m.name)).toEqual(["Bob", "Cid", "Aaron"]);
+    expect(new Set(rows.map((m) => m.order)).size).toBe(3);
+    expect(rows[2].order).toBe(3);
+  });
+
   it("copies members from the previous term once, and refuses a second copy or copying with no earlier term", async () => {
     await signIn({ permissions: ["team.manage"] });
     const prev = await makeTerm(2025, "2025-26");

@@ -47,13 +47,16 @@ export async function saveTeamMemberAction(
         (existing.tier !== input.tier || existing.domainId !== input.domainId);
       const order =
         !existing || groupChanged
-          ? await tx.teamMember.count({
-              where: {
-                termId: input.termId,
-                tier: input.tier,
-                domainId: input.domainId,
-              },
-            })
+          ? ((
+              await tx.teamMember.aggregate({
+                where: {
+                  termId: input.termId,
+                  tier: input.tier,
+                  domainId: input.domainId,
+                },
+                _max: { order: true },
+              })
+            )._max.order ?? -1) + 1
           : existing.order;
       const data = {
         termId: input.termId,
