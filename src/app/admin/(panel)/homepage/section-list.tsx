@@ -17,7 +17,7 @@ function Row({ id, label, enabled, selected, onSelect, onToggle, onRemove }: { i
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
-        "flex items-center gap-2 rounded-xl border px-3 py-2.5",
+        "flex min-w-0 items-center gap-2 rounded-xl border px-3 py-2.5",
         selected ? "border-leaf/40 bg-leaf/5" : "border-line bg-surface",
         isDragging && "z-10 shadow-lg",
       )}
