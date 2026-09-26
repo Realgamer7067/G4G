@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { AnnouncementBanner } from "@/components/site/announcement-banner";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
+import { getBannerAnnouncement } from "@/lib/data/announcements";
 import { getNavigation } from "@/lib/data/pages";
 import { getSiteSettings } from "@/lib/data/site";
 import { ogImage } from "@/lib/media/public-image";
@@ -26,7 +28,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function SiteLayout({ children }: LayoutProps<"/">) {
-  const [settings, nav] = await Promise.all([getSiteSettings(), getNavigation()]);
+  const [settings, nav, banner] = await Promise.all([getSiteSettings(), getNavigation(), getBannerAnnouncement()]);
   return (
     <div className="flex min-h-dvh flex-col">
       <a
@@ -35,6 +37,7 @@ export default async function SiteLayout({ children }: LayoutProps<"/">) {
       >
         Skip to content
       </a>
+      {banner && <AnnouncementBanner announcement={banner} />}
       <SiteHeader clubName={settings.clubName} shortName={settings.shortName} nav={nav} cta={settings.navCta} logo={settings.logo} />
       <main id="main" className="flex-1">
         {children}
