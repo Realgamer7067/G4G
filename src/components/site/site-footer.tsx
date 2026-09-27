@@ -113,8 +113,11 @@ export function SiteFooter({ settings, nav }: { settings: SiteSettingsDTO; nav: 
         </div>
       </div>
 
-      <div className="container-x" aria-hidden="true">
-        <p className="select-none truncate font-display text-[clamp(3.5rem,13vw,11rem)] font-extrabold leading-[0.85] tracking-[-0.04em] text-transparent [-webkit-text-stroke:1px_rgb(92_201_123/0.35)]">
+      <div className="container-x @container" aria-hidden="true">
+        {/* Sized from the name's length so the whole wordmark spans the container without clipping. */}
+        <p
+          style={{ fontSize: `min(11rem, ${(100 / (0.54 * Math.max(settings.shortName.length, 6))).toFixed(2)}cqw)` }}
+          className="select-none truncate pb-4 font-display font-extrabold leading-[0.95] tracking-[-0.04em] text-transparent [-webkit-text-stroke:1px_rgb(92_201_123/0.35)]">
           {settings.shortName}
         </p>
       </div>

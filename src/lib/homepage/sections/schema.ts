@@ -12,6 +12,7 @@ export const SECTION_TYPES = [
   "sponsors",
   "social",
   "cta",
+  "marquee",
 ] as const;
 export type SectionType = (typeof SECTION_TYPES)[number];
 
@@ -30,18 +31,32 @@ export const heroContentSchema = z.object({
   highlightedWord: optionalText(40),
   subheading: optionalText(240),
   ctas: z.array(ctaLinkSchema).max(2).default([]),
-  backgroundVariant: z.enum(["rings", "grid", "glow"]).default("rings"),
+  backgroundVariant: z.enum(["dots", "rings", "grid", "glow"]).default("dots"),
   terminalLines: z.array(z.string().trim().max(80)).max(6).default([]),
   showLogoTile: z.boolean().default(true),
   showSocials: z.boolean().default(false),
+  /** Main (4:5) and offset photos for the hero media stack. Without them the hero falls back to a typographic panel. */
+  imageId: z.string().nullable().default(null),
+  secondaryImageId: z.string().nullable().default(null),
+  /** Floating "Next up" card linking to the next upcoming event, when there is one. */
+  showNextEvent: z.boolean().default(true),
 });
 export type HeroContent = z.infer<typeof heroContentSchema>;
 
+export const ABOUT_ACTIVITY_ICONS = ["book", "code", "users", "rocket", "trophy", "lightbulb", "branch", "mic"] as const;
+const aboutActivitySchema = z.object({
+  id: idSchema,
+  icon: z.enum(ABOUT_ACTIVITY_ICONS).default("code"),
+  title: z.string().trim().min(1, "Add a title.").max(40),
+  description: z.string().trim().max(160).default(""),
+});
 export const aboutContentSchema = z.object({
   heading: optionalText(80),
   body: z.string().trim().max(2000).default(""),
   imageId: z.string().nullable().default(null),
+  activities: z.array(aboutActivitySchema).max(4).default([]),
 });
+export type AboutActivity = z.infer<typeof aboutActivitySchema>;
 export type AboutContent = z.infer<typeof aboutContentSchema>;
 
 export const STAT_SOURCES = ["manual", "events_completed", "team_members", "gallery_photos"] as const;
@@ -116,6 +131,11 @@ export const ctaContentSchema = z.object({
 });
 export type CtaContent = z.infer<typeof ctaContentSchema>;
 
+export const marqueeContentSchema = z.object({
+  items: z.array(z.string().trim().min(1).max(40)).min(1, "Add at least one item.").max(12).default([]),
+});
+export type MarqueeContent = z.infer<typeof marqueeContentSchema>;
+
 const baseSectionFields = {
   id: idSchema,
   enabled: z.boolean().default(true),
@@ -136,6 +156,7 @@ export const sectionSchema = z.discriminatedUnion("type", [
   z.object({ ...baseSectionFields, type: z.literal("sponsors"), content: sponsorsContentSchema }),
   z.object({ ...baseSectionFields, type: z.literal("social"), content: socialContentSchema }),
   z.object({ ...baseSectionFields, type: z.literal("cta"), content: ctaContentSchema }),
+  z.object({ ...baseSectionFields, type: z.literal("marquee"), content: marqueeContentSchema }),
 ]);
 export type Section = z.infer<typeof sectionSchema>;
 

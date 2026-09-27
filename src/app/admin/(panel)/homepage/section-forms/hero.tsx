@@ -1,10 +1,45 @@
 "use client";
 
+import { ImagePicker } from "@/components/admin/image-picker";
+import type { HomepageImageDTO } from "@/lib/data/homepage";
 import type { Section, SectionOfType } from "@/lib/homepage/sections/schema";
 
-export function HeroForm({ section, onUpdate }: { section: SectionOfType<"hero">; onUpdate: (patch: Partial<Section>) => void }) {
+export function HeroForm({
+  section,
+  onUpdate,
+  images,
+  onImageResolved,
+}: {
+  section: SectionOfType<"hero">;
+  onUpdate: (patch: Partial<Section>) => void;
+  images: Record<string, HomepageImageDTO>;
+  onImageResolved: (id: string, image: HomepageImageDTO) => void;
+}) {
   const c = section.content;
   const patchContent = (content: Partial<typeof c>) => onUpdate({ content } as Partial<Section>);
+  const picker = (key: "imageId" | "secondaryImageId", label: string) => {
+    const id = c[key];
+    const image = id ? images[id] : undefined;
+    return (
+      <div className="grid gap-1">
+        <span className="text-sm text-muted">{label}</span>
+        <ImagePicker
+          uploadId={id}
+          url={image?.url ?? null}
+          alt={image?.alt ?? ""}
+          onChange={(uploadId, url, alt) => {
+            onImageResolved(uploadId, { url, alt });
+            patchContent({ [key]: uploadId });
+          }}
+        />
+        {id && (
+          <button type="button" onClick={() => patchContent({ [key]: null })} className="w-fit text-xs text-muted hover:text-danger">
+            Remove image
+          </button>
+        )}
+      </div>
+    );
+  };
   return (
     <div className="grid gap-3">
       <label className="grid gap-1 text-sm">
@@ -22,10 +57,17 @@ export function HeroForm({ section, onUpdate }: { section: SectionOfType<"hero">
       <label className="grid gap-1 text-sm">
         <span className="text-muted">Background</span>
         <select value={c.backgroundVariant} onChange={(e) => patchContent({ backgroundVariant: e.target.value as typeof c.backgroundVariant })} className="rounded-lg border border-line bg-transparent px-3 py-1.5 text-sm">
+          <option value="dots">Dots</option>
           <option value="rings">Rings</option>
           <option value="grid">Grid</option>
           <option value="glow">Glow</option>
         </select>
+      </label>
+      {picker("imageId", "Main photo (portrait works best)")}
+      {c.imageId && picker("secondaryImageId", "Second photo (optional)")}
+      <label className="flex items-center gap-2 text-sm">
+        <input type="checkbox" checked={c.showNextEvent} onChange={(e) => patchContent({ showNextEvent: e.target.checked })} className="accent-leaf" />
+        Show the next upcoming event
       </label>
       <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" checked={c.showLogoTile} onChange={(e) => patchContent({ showLogoTile: e.target.checked })} className="accent-leaf" />

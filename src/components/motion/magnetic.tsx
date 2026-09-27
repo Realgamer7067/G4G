@@ -11,7 +11,6 @@ export function Magnetic({ children, strength = 0.28, className }: { children: R
   const x = useSpring(useMotionValue(0), { stiffness: 220, damping: 18, mass: 0.4 });
   const y = useSpring(useMotionValue(0), { stiffness: 220, damping: 18, mass: 0.4 });
 
-  if (reduce) return <span className={cn("inline-flex", className)}>{children}</span>;
 
   return (
     <motion.span
@@ -19,7 +18,7 @@ export function Magnetic({ children, strength = 0.28, className }: { children: R
       className={cn("inline-flex", className)}
       style={{ x, y }}
       onPointerMove={(e) => {
-        if (e.pointerType !== "mouse" || !ref.current) return;
+        if (reduce || e.pointerType !== "mouse" || !ref.current) return;
         const r = ref.current.getBoundingClientRect();
         x.set((e.clientX - (r.left + r.width / 2)) * strength);
         y.set((e.clientY - (r.top + r.height / 2)) * strength);

@@ -52,6 +52,7 @@ export async function loadHomepageHistory(): Promise<HomepageHistoryEntry[]> {
 export async function resolveHomepageImages(sections: HomepageSections): Promise<Record<string, PublicImage>> {
   const ids = new Set<string>();
   for (const s of sections) {
+    if (s.type === "hero") for (const id of [s.content.imageId, s.content.secondaryImageId]) if (id) ids.add(id);
     if (s.type === "about" && s.content.imageId) ids.add(s.content.imageId);
     if (s.type === "achievements") for (const item of s.content.items) if (item.imageId) ids.add(item.imageId);
   }

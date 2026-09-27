@@ -13,9 +13,9 @@ export function blankSection(type: SectionType): Section {
   const base = { id, enabled: true } as const;
   switch (type) {
     case "hero":
-      return { ...base, type, content: { heading: "New heading", ctas: [], backgroundVariant: "rings", terminalLines: [], showLogoTile: true, showSocials: false } };
+      return { ...base, type, content: { heading: "New heading", ctas: [], backgroundVariant: "dots", terminalLines: [], showLogoTile: true, showSocials: false, imageId: null, secondaryImageId: null, showNextEvent: true } };
     case "about":
-      return { ...base, type, content: { body: "", imageId: null } };
+      return { ...base, type, content: { body: "", imageId: null, activities: [] } };
     case "stats":
       return { ...base, type, content: { items: [] } };
     case "event_spotlight":
@@ -34,5 +34,7 @@ export function blankSection(type: SectionType): Section {
       return { ...base, type, content: { style: "icons" } };
     case "cta":
       return { ...base, type, content: { heading: "Ready to get involved?", ctas: [{ label: "Join us", href: "/events", style: "primary" }], backgroundVariant: "gradient" } };
+    case "marquee":
+      return { ...base, type, content: { items: ["DSA", "Web Dev", "AI/ML", "Open Source"] } };
   }
 }

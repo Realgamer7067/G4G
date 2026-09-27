@@ -15,7 +15,12 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${display.variable} ${sans.variable} ${mono.variable}`}>
-      <body>{children}</body>
+      <body>
+        <noscript>
+          <style>{"[data-motion]{opacity:1!important;transform:none!important}"}</style>
+        </noscript>
+        {children}
+      </body>
     </html>
   );
 }

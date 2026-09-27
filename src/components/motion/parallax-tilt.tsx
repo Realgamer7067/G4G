@@ -12,7 +12,6 @@ export function ParallaxTilt({ children, className, max = 6 }: { children: React
   const rotateY = useSpring(useTransform(px, [-0.5, 0.5], [-max, max]), { stiffness: 120, damping: 20 });
   const rotateX = useSpring(useTransform(py, [-0.5, 0.5], [max, -max]), { stiffness: 120, damping: 20 });
 
-  if (reduce) return <div className={className}>{children}</div>;
 
   return (
     <motion.div
@@ -20,7 +19,7 @@ export function ParallaxTilt({ children, className, max = 6 }: { children: React
       className={className}
       style={{ rotateX, rotateY, transformPerspective: 1100 }}
       onPointerMove={(e) => {
-        if (e.pointerType !== "mouse" || !ref.current) return;
+        if (reduce || e.pointerType !== "mouse" || !ref.current) return;
         const r = ref.current.getBoundingClientRect();
         px.set((e.clientX - r.left) / r.width - 0.5);
         py.set((e.clientY - r.top) / r.height - 0.5);

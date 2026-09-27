@@ -6,7 +6,7 @@ import type { HomepageSections, Section } from "./schema";
 
 function fixture(): HomepageSections {
   return [
-    { id: "a", type: "hero", enabled: true, content: { heading: "H", ctas: [], backgroundVariant: "rings", terminalLines: [], showLogoTile: true, showSocials: false } },
+    { id: "a", type: "hero", enabled: true, content: { heading: "H", ctas: [], backgroundVariant: "rings", terminalLines: [], showLogoTile: true, showSocials: false, imageId: null, secondaryImageId: null, showNextEvent: true } },
     { id: "b", type: "stats", enabled: true, content: { items: [] } },
     { id: "c", type: "cta", enabled: false, content: { heading: "C", ctas: [{ label: "Go", href: "/x", style: "primary" }], backgroundVariant: "gradient" } },
   ];
