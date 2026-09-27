@@ -3,12 +3,11 @@ import { Mail, MapPin, Phone } from "lucide-react";
 import { LogoTile } from "@/components/brand/logo-tile";
 import type { SiteSettingsDTO } from "@/lib/data/site";
 import type { NavItem } from "@/lib/pages/registry";
-import { Rings } from "./rings";
 import { SocialIcon, socialLinks } from "./social-icons";
 
 function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
   const external = /^https?:/.test(href);
-  const className = "text-sm text-muted transition-colors hover:text-frost";
+  const className = "link-sweep text-sm text-muted transition-colors hover:text-frost";
   return external ? (
     <a href={href} target="_blank" rel="noopener noreferrer" className={className}>
       {children}
@@ -32,8 +31,8 @@ export function SiteFooter({ settings, nav }: { settings: SiteSettingsDTO; nav: 
 
   return (
     <footer className="relative isolate mt-24 overflow-hidden border-t border-line bg-pine">
-      <Rings className="pointer-events-none absolute -left-64 -top-40 -z-10 size-[620px] opacity-30" />
-      <div className="mx-auto grid max-w-7xl gap-12 px-4 py-14 sm:px-6 lg:grid-cols-[1.4fr_2fr] lg:px-8">
+      <div aria-hidden="true" className="bg-dots pointer-events-none absolute inset-0 -z-10 opacity-60 [mask-image:linear-gradient(to_bottom,transparent,#000_30%,#000)]" />
+      <div className="container-x grid gap-12 py-16 lg:grid-cols-[1.3fr_2fr]">
         <div className="grid content-start gap-5">
           <Link href="/" className="flex items-center gap-3">
             <LogoTile size="md" />
@@ -53,7 +52,7 @@ export function SiteFooter({ settings, nav }: { settings: SiteSettingsDTO; nav: 
                     rel="noopener noreferrer"
                     aria-label={s.label}
                     title={s.label}
-                    className="grid size-10 place-items-center rounded-full border border-line bg-night/60 text-muted transition-colors hover:border-leaf/50 hover:text-leaf"
+                    className="grid size-11 place-items-center rounded-full border border-line bg-night/60 text-muted transition-[color,border-color,transform] duration-200 hover:-translate-y-0.5 hover:border-leaf/50 hover:text-leaf"
                   >
                     <SocialIcon network={s.network} />
                   </a>
@@ -66,8 +65,8 @@ export function SiteFooter({ settings, nav }: { settings: SiteSettingsDTO; nav: 
         <div className="grid gap-10 sm:grid-cols-2 md:grid-cols-3">
           {columns.map((col) => (
             <nav key={col.title} aria-label={col.title} className="grid content-start gap-3">
-              <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-leaf">{col.title}</p>
-              <ul className="grid gap-2">
+              <p className="text-sm font-semibold text-frost">{col.title}</p>
+              <ul className="grid gap-2.5">
                 {col.links.map((l) => (
                   <li key={`${l.label}-${l.href}`}>
                     <FooterLink href={l.href}>{l.label}</FooterLink>
@@ -78,12 +77,12 @@ export function SiteFooter({ settings, nav }: { settings: SiteSettingsDTO; nav: 
           ))}
           {(settings.email || settings.phone || settings.address) && (
             <div className="grid content-start gap-3">
-              <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-leaf">Contact</p>
+              <p className="text-sm font-semibold text-frost">Contact</p>
               <ul className="grid gap-2.5 text-sm text-muted">
                 {settings.email && (
                   <li className="flex gap-2">
                     <Mail aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-                    <a href={`mailto:${settings.email}`} className="break-all hover:text-frost">
+                    <a href={`mailto:${settings.email}`} className="link-sweep break-all hover:text-frost">
                       {settings.email}
                     </a>
                   </li>
@@ -91,7 +90,7 @@ export function SiteFooter({ settings, nav }: { settings: SiteSettingsDTO; nav: 
                 {settings.phone && (
                   <li className="flex gap-2">
                     <Phone aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-                    <a href={`tel:${settings.phone.replace(/\s+/g, "")}`} className="hover:text-frost">
+                    <a href={`tel:${settings.phone.replace(/\s+/g, "")}`} className="link-sweep hover:text-frost">
                       {settings.phone}
                     </a>
                   </li>
@@ -100,7 +99,7 @@ export function SiteFooter({ settings, nav }: { settings: SiteSettingsDTO; nav: 
                   <li className="flex gap-2">
                     <MapPin aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
                     {settings.mapUrl ? (
-                      <a href={settings.mapUrl} target="_blank" rel="noopener noreferrer" className="whitespace-pre-line hover:text-frost">
+                      <a href={settings.mapUrl} target="_blank" rel="noopener noreferrer" className="link-sweep whitespace-pre-line hover:text-frost">
                         {settings.address}
                       </a>
                     ) : (
@@ -113,10 +112,20 @@ export function SiteFooter({ settings, nav }: { settings: SiteSettingsDTO; nav: 
           )}
         </div>
       </div>
-      <div className="border-t border-line/70">
-        <p className="mx-auto max-w-7xl px-4 py-5 text-xs text-muted sm:px-6 lg:px-8">
-          © {year} {settings.footer.copyright || settings.clubName}
+
+      <div className="container-x" aria-hidden="true">
+        <p className="select-none truncate font-display text-[clamp(3.5rem,13vw,11rem)] font-extrabold leading-[0.85] tracking-[-0.04em] text-transparent [-webkit-text-stroke:1px_rgb(92_201_123/0.35)]">
+          {settings.shortName}
         </p>
+      </div>
+
+      <div className="border-t border-line/70">
+        <div className="container-x flex flex-wrap items-center justify-between gap-2 py-5 text-xs text-muted">
+          <p>
+            © {year} {settings.footer.copyright || settings.clubName}
+          </p>
+          {settings.universityName && <p>{settings.universityName}</p>}
+        </div>
       </div>
     </footer>
   );

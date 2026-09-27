@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { ArrowUpRight, Menu, X } from "lucide-react";
+import { AnimatePresence, motion, useMotionValueEvent, useReducedMotion, useScroll } from "motion/react";
 import { LogoTile } from "@/components/brand/logo-tile";
+import { Magnetic } from "@/components/motion/magnetic";
 import { Picture } from "@/components/media/picture";
 import type { PublicImage } from "@/lib/media/public-image";
 import type { NavItem } from "@/lib/pages/registry";
@@ -29,23 +31,32 @@ export function SiteHeader({
   logo: PublicImage | null;
 }) {
   const pathname = usePathname();
+  const reduce = useReducedMotion();
   const [scrolled, setScrolled] = useState(false);
   const [openOn, setOpenOn] = useState<string | null>(null);
   const open = openOn === pathname;
+  const toggleRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLElement>(null);
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 12);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  const { scrollY } = useScroll();
+  useMotionValueEvent(scrollY, "change", (y) => setScrolled(y > 16));
+
+  const close = () => setOpenOn(null);
 
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpenOn(null);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpenOn(null);
+        toggleRef.current?.focus();
+      }
+    };
     document.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
+    // Move focus into the panel so keyboard users land on the first link.
+    const id = requestAnimationFrame(() => panelRef.current?.querySelector<HTMLElement>("a")?.focus());
     return () => {
+      cancelAnimationFrame(id);
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
     };
@@ -62,11 +73,11 @@ export function SiteHeader({
   return (
     <header
       className={cn(
-        "sticky top-0 z-50 transition-[background-color,border-color,backdrop-filter] duration-300",
-        scrolled || open ? "border-b border-line/70 bg-night/80 backdrop-blur-xl" : "border-b border-transparent",
+        "sticky top-0 z-50 border-b transition-[background-color,border-color,backdrop-filter] duration-200 ease-out",
+        scrolled || open ? "border-line/70 bg-night/85 backdrop-blur-xl" : "border-transparent bg-night/40 backdrop-blur-sm",
       )}
     >
-      <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
+      <div className="container-x flex h-16 items-center gap-4">
         <Link href="/" className="flex min-w-0 items-center gap-3 rounded-xl" aria-label={`${clubName} home`}>
           {brand}
           <span className="hidden truncate font-display text-[15px] font-semibold tracking-tight sm:block">{clubName}</span>
@@ -74,66 +85,100 @@ export function SiteHeader({
         </Link>
 
         <nav aria-label="Main" className="ml-auto hidden items-center gap-1 lg:flex">
-          {nav.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={isActive(pathname, item.href) ? "page" : undefined}
-              className={cn(
-                "relative rounded-full px-3.5 py-2 text-sm text-muted transition-colors hover:text-frost",
-                "aria-[current=page]:text-frost after:absolute after:inset-x-3.5 after:-bottom-0.5 after:h-px after:origin-left after:scale-x-0 after:bg-leaf after:transition-transform aria-[current=page]:after:scale-x-100",
-              )}
-            >
-              {item.label}
-            </Link>
-          ))}
+          {nav.map((item) => {
+            const active = isActive(pathname, item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "group relative px-3 py-2 text-sm transition-colors duration-150",
+                  active ? "font-medium text-frost" : "text-muted hover:text-frost",
+                )}
+              >
+                {item.label}
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "absolute inset-x-3 -bottom-px h-0.5 origin-left rounded-full bg-leaf transition-transform duration-180 ease-out",
+                    active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100 group-focus-visible:scale-x-100",
+                  )}
+                />
+              </Link>
+            );
+          })}
         </nav>
 
         {cta && (
-          <Link
-            href={cta.href}
-            className="ml-auto hidden rounded-full bg-leaf px-4 py-2 text-sm font-semibold text-night shadow-[0_10px_30px_-12px_rgb(92_201_123/0.7)] transition-transform hover:-translate-y-px sm:inline-flex lg:ml-2"
-          >
-            {cta.label}
-          </Link>
+          <Magnetic className="ml-auto hidden sm:inline-flex lg:ml-2">
+            <Link
+              href={cta.href}
+              className="inline-flex items-center gap-1.5 rounded-full bg-leaf px-4 py-2 text-sm font-semibold text-night shadow-[0_10px_30px_-12px_rgb(92_201_123/0.7)] transition-[transform,background-color] duration-200 hover:bg-[#72d48e] active:scale-[0.985]"
+            >
+              {cta.label}
+              <ArrowUpRight className="size-3.5" aria-hidden="true" />
+            </Link>
+          </Magnetic>
         )}
 
         {(nav.length > 0 || cta) && (
           <button
+            ref={toggleRef}
             type="button"
             onClick={() => setOpenOn(open ? null : pathname)}
             aria-expanded={open}
             aria-controls="mobile-menu"
             aria-label={open ? "Close menu" : "Open menu"}
-            className={cn("rounded-full p-2 text-muted hover:bg-raised hover:text-frost lg:hidden", !cta && "ml-auto")}
+            className={cn("grid size-11 place-items-center rounded-full text-muted hover:bg-raised hover:text-frost lg:hidden", !cta && "ml-auto")}
           >
             {open ? <X className="size-5" aria-hidden="true" /> : <Menu className="size-5" aria-hidden="true" />}
           </button>
         )}
       </div>
 
-      {open && (
-        <nav id="mobile-menu" aria-label="Main" className="border-t border-line/70 px-4 pb-6 pt-2 lg:hidden">
-          <ul className="grid gap-1">
-            {nav.map((item, i) => (
-              <li key={item.href} className="motion-safe:animate-[menu-in_.35s_both]" style={{ animationDelay: `${i * 35}ms` }}>
-                <Link
-                  href={item.href}
-                  aria-current={isActive(pathname, item.href) ? "page" : undefined}
-                  className="flex items-center justify-between rounded-xl px-3 py-3 font-display text-2xl font-semibold tracking-tight text-frost/90 hover:bg-raised aria-[current=page]:text-leaf"
-                >
-                  {item.label}
+      <AnimatePresence>
+        {open && (
+          <motion.nav
+            ref={panelRef}
+            id="mobile-menu"
+            aria-label="Main"
+            className="border-t border-line/70 lg:hidden"
+            initial={reduce ? false : { opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={reduce ? { opacity: 0 } : { opacity: 0, y: -8 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <div className="container-x pb-6 pt-2">
+              <ul className="grid divide-y divide-line/60">
+                {nav.map((item, i) => (
+                  <motion.li
+                    key={item.href}
+                    initial={reduce ? false : { opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.22, delay: Math.min(i * 0.025, 0.125), ease: [0.22, 1, 0.36, 1] }}
+                  >
+                    <Link
+                      href={item.href}
+                      onClick={close}
+                      aria-current={isActive(pathname, item.href) ? "page" : undefined}
+                      className="flex min-h-14 items-center justify-between py-3 font-display text-2xl font-semibold tracking-tight text-frost/90 aria-[current=page]:text-leaf"
+                    >
+                      {item.label}
+                      <ArrowUpRight className="size-5 text-muted" aria-hidden="true" />
+                    </Link>
+                  </motion.li>
+                ))}
+              </ul>
+              {cta && (
+                <Link href={cta.href} onClick={close} className="mt-5 flex h-12 items-center justify-center rounded-full bg-leaf px-4 font-semibold text-night">
+                  {cta.label}
                 </Link>
-              </li>
-            ))}
-          </ul>
-          {cta && (
-            <Link href={cta.href} className="mt-4 flex justify-center rounded-full bg-leaf px-4 py-3 font-semibold text-night">
-              {cta.label}
-            </Link>
-          )}
-        </nav>
-      )}
+              )}
+            </div>
+          </motion.nav>
+        )}
+      </AnimatePresence>
     </header>
   );
 }

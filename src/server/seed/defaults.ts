@@ -2,16 +2,17 @@ import type { PageKey } from "@/generated/prisma/client";
 
 export const SITE_DEFAULTS = {
   clubName: "GeeksforGeeks Student Chapter",
-  shortName: "GFG Student Chapter",
+  shortName: "GFG VIT Bhopal",
   tagline: "Learn it. Build it. Ship it together.",
   description:
     "A student-run community for people who like to build: workshops, hackathons, open-source sprints and a crew that actually pushes code.",
-  universityName: "Your University",
-  email: "gfg.chapter@example.edu",
+  universityName: "VIT Bhopal University",
+  // Left empty on purpose: the site hides contact details that aren't set, rather than showing a placeholder.
+  email: "",
   timezone: "Asia/Kolkata",
   socials: { instagram: "", linkedin: "", github: "", youtube: "", discord: "", whatsapp: "", x: "", custom: [] },
-  footer: { blurb: "Built by students, for students.", columns: [], copyright: "GeeksforGeeks Student Chapter" },
-  seo: { titleTemplate: "%s · GFG Student Chapter", defaultDescription: "Workshops, hackathons and a community of student builders." },
+  footer: { blurb: "Built by students, for students.", columns: [], copyright: "GeeksforGeeks Student Chapter, VIT Bhopal" },
+  seo: { titleTemplate: "%s · GFG VIT Bhopal", defaultDescription: "Workshops, hackathons and a community of student builders." },
 }; // not `as const`: readonly arrays don't satisfy Prisma's JSON input types
 
 export const PAGE_DEFAULTS: { key: PageKey; navLabel: string; navOrder: number; showInNav: boolean }[] = [

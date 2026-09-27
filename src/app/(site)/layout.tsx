@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SmoothScroll } from "@/components/motion/smooth-scroll";
 import { AnnouncementBanner } from "@/components/site/announcement-banner";
 import { PageViewBeacon } from "@/components/site/page-view-beacon";
 import { SiteFooter } from "@/components/site/site-footer";
@@ -45,6 +46,7 @@ export default async function SiteLayout({ children }: LayoutProps<"/">) {
       </main>
       <SiteFooter settings={settings} nav={nav} />
       <PageViewBeacon />
+      <SmoothScroll />
     </div>
   );
 }
