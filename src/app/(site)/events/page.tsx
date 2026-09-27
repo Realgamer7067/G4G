@@ -91,7 +91,7 @@ export default async function EventsPage({ searchParams }: PageProps<"/events">)
 
       {featured && (
         <section aria-label="Next event" className="container-x pb-10">
-          <FeaturedEvent event={featured} timezone={timezone} now={now} priority />
+          <FeaturedEvent event={featured} timezone={timezone} now={now} priority reveal={false} />
         </section>
       )}
 

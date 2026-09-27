@@ -62,7 +62,7 @@ export function AnnouncementBanner({ announcement }: { announcement: BannerAnnou
         <p className="min-w-0 flex-1 truncate">
           <Link href={href} target={external ? "_blank" : undefined} rel={external ? "noopener noreferrer" : undefined} className="hover:underline">
             <span className="font-semibold">{announcement.title}</span>
-            {announcement.summary && <span className="text-muted"> — {announcement.summary}</span>}
+            {announcement.summary && <span className="text-muted"> · {announcement.summary}</span>}
           </Link>
         </p>
         <button type="button" aria-label="Dismiss announcement" onClick={dismiss} className="shrink-0 rounded-md p-1 text-muted hover:bg-raised hover:text-frost">

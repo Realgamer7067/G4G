@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { animate, useInView, useReducedMotion } from "motion/react";
+import { useInView, useReducedMotion } from "motion/react";
+
+// Ease-out-expo; a plain rAF loop keeps Motion's animation engine out of the initial bundle.
+const easeOut = (t: number) => (t >= 1 ? 1 : 1 - Math.pow(2, -10 * t));
 
 /** Counts from 0 to `value` once in view. The final value is in the DOM from the start (SSR, no-JS, reduced motion). */
 export function CountUp({ value, className }: { value: number; className?: string }) {
@@ -13,14 +16,14 @@ export function CountUp({ value, className }: { value: number; className?: strin
   useEffect(() => {
     const el = ref.current;
     if (!el || !inView || reduce || value === 0) return;
-    const controls = animate(0, value, {
-      duration: Math.min(2, 0.8 + value / 400),
-      ease: [0.22, 1, 0.36, 1],
-      onUpdate: (n) => {
-        el.textContent = format(n);
-      },
+    const duration = Math.min(2000, 800 + value * 2.5);
+    const start = performance.now();
+    let frame = requestAnimationFrame(function tick(now) {
+      const t = Math.min(1, (now - start) / duration);
+      el.textContent = format(value * easeOut(t));
+      if (t < 1) frame = requestAnimationFrame(tick);
     });
-    return () => controls.stop();
+    return () => cancelAnimationFrame(frame);
   }, [inView, reduce, value]);
 
   return (

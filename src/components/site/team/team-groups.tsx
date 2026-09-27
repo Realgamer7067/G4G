@@ -3,12 +3,12 @@ import { MemberPortrait } from "@/components/site/team/member-portrait";
 import type { PublicTeamMember } from "@/lib/data/team";
 import { groupByDomain, groupByTier, teamMemberLinkList } from "@/lib/team/schema";
 
-function MemberCard({ member }: { member: PublicTeamMember }) {
+function MemberCard({ member, priority = false }: { member: PublicTeamMember; priority?: boolean }) {
   const links = teamMemberLinkList(member.links);
   return (
     <li className="reveal group grid min-w-0 content-start gap-4">
       <div className="relative">
-        <MemberPortrait member={member} sizes="(min-width: 1280px) 290px, (min-width: 1024px) 30vw, (min-width: 640px) 45vw, 90vw" />
+        <MemberPortrait member={member} priority={priority} sizes="(min-width: 1280px) 290px, (min-width: 1024px) 30vw, (min-width: 640px) 45vw, 90vw" />
         {links.length > 0 && (
           <div className="absolute inset-x-3 bottom-3 flex flex-wrap gap-1.5 transition-[opacity,transform] duration-200 [@media(hover:hover)]:translate-y-1 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-focus-within:translate-y-0 [@media(hover:hover)]:group-focus-within:opacity-100 [@media(hover:hover)]:group-hover:translate-y-0 [@media(hover:hover)]:group-hover:opacity-100">
             {links.map((l) => (
@@ -45,7 +45,7 @@ export function TeamGroups({ members }: { members: PublicTeamMember[] }) {
   }
   return (
     <div className="grid gap-20">
-      {tierGroups.map((g) => (
+      {tierGroups.map((g, gi) => (
         <section key={g.tier} aria-labelledby={`tier-${g.tier}`} className="grid gap-6">
           <h2 id={`tier-${g.tier}`} className="border-b border-line pb-4 font-display text-3xl font-extrabold tracking-[-0.02em]">
             {g.label}
@@ -65,8 +65,9 @@ export function TeamGroups({ members }: { members: PublicTeamMember[] }) {
             </div>
           ) : (
             <ul className="grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 lg:grid-cols-3 xl:grid-cols-4">
-              {g.members.map((m) => (
-                <MemberCard key={m.id} member={m} />
+              {g.members.map((m, i) => (
+                // The first portraits of the first tier are above the fold on phones and desktops.
+                <MemberCard key={m.id} member={m} priority={gi === 0 && i < 2} />
               ))}
             </ul>
           )}

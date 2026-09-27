@@ -16,19 +16,23 @@ export function FeaturedEvent({
   now,
   showCountdown = true,
   priority = false,
+  reveal = true,
 }: {
   event: EventCardDTO;
   timezone: string;
   now: Date;
   showCountdown?: boolean;
   priority?: boolean;
+  /** Off when the card is above the fold, so it paints without waiting for hydration. */
+  reveal?: boolean;
 }) {
   const upcoming = new Date(event.endAt) > now;
   const when = formatEventWhen(event.startAt, event.endAt, timezone);
   const status = deriveEventStatus(statusInputOf(event), statsOf(event, now), now);
   const place = event.mode === "ONLINE" ? "Online" : event.mode === "HYBRID" ? `${event.venue || "On campus"} + online` : event.venue;
+  const Wrapper = reveal ? Reveal : "div";
   return (
-    <Reveal className="group grid overflow-hidden rounded-[28px] border border-line bg-surface lg:grid-cols-[7fr_5fr]">
+    <Wrapper className="group grid overflow-hidden rounded-[28px] border border-line bg-surface lg:grid-cols-[7fr_5fr]">
       <Link href={`/events/${event.slug}`} className="relative block aspect-[16/10] overflow-hidden bg-night lg:aspect-auto lg:min-h-[28rem]" tabIndex={-1} aria-hidden="true">
         {event.poster ? (
           <Picture
@@ -79,6 +83,6 @@ export function FeaturedEvent({
           </LinkButton>
         </div>
       </div>
-    </Reveal>
+    </Wrapper>
   );
 }

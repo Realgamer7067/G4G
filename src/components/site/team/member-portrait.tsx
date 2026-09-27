@@ -8,7 +8,7 @@ function initials(name: string): string {
 }
 
 /** A 4:5 portrait; members without a photo get their initials on a tinted panel instead of an empty circle. */
-export function MemberPortrait({ member, sizes, className }: { member: PublicTeamMember; sizes: string; className?: string }) {
+export function MemberPortrait({ member, sizes, className, priority = false }: { member: PublicTeamMember; sizes: string; className?: string; priority?: boolean }) {
   return (
     <div className={cn("relative aspect-[4/5] overflow-hidden rounded-[20px] bg-raised", className)}>
       {member.photo ? (
@@ -16,6 +16,7 @@ export function MemberPortrait({ member, sizes, className }: { member: PublicTea
           image={member.photo}
           sizes={sizes}
           alt=""
+          priority={priority}
           imgClassName="absolute inset-0 size-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04] motion-reduce:transform-none"
         />
       ) : (

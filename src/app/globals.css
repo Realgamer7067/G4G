@@ -228,9 +228,11 @@ html.lenis body {
 }
 
 /* Hero entrance: plays once per visit (HeroIntroOnce adds .hero-static on later client-side visits). */
+/* Intro frames start at 0.01, not 0: Chrome skips fully transparent elements as LCP candidates,
+   which would push LCP onto whatever small text paints last. */
 @keyframes hero-rise {
   from {
-    opacity: 0;
+    opacity: 0.01;
     transform: translateY(18px);
   }
   to {
@@ -240,7 +242,7 @@ html.lenis body {
 }
 @keyframes hero-media {
   from {
-    opacity: 0;
+    opacity: 0.01;
     transform: scale(1.025);
   }
   to {
@@ -269,7 +271,7 @@ html.lenis body {
     animation: hero-rise 0.46s var(--ease-out-expo) 0.18s both;
   }
   .hero-media-in {
-    animation: hero-media 0.6s var(--ease-out-expo) 0.12s both;
+    animation: hero-media 0.6s var(--ease-out-expo) both;
   }
   .hero-chip-in {
     animation: hero-chip 0.5s var(--ease-out-expo) 0.55s both;
