@@ -1,11 +1,15 @@
 import Link from "next/link";
 import { EventCard } from "@/components/events/event-card";
-import { Rings } from "@/components/site/rings";
+import { FeaturedEvent } from "@/components/events/featured-event";
+import { PageIntro } from "@/components/site/page-intro";
 import { assertPageEnabled } from "@/lib/data/pages";
 import { getPublicEvents } from "@/lib/data/events";
 import { getSiteSettings } from "@/lib/data/site";
 import { metadataForPage } from "@/lib/seo";
 import { cn } from "@/lib/utils/cn";
+
+const CHIP =
+  "rounded-full border border-line px-3 py-1.5 text-sm text-muted transition-colors duration-200 hover:text-frost aria-[current=page]:border-leaf/50 aria-[current=page]:bg-leaf/10 aria-[current=page]:text-frost";
 
 export async function generateMetadata() {
   return metadataForPage("EVENTS", { title: "Events", description: "Workshops, hackathons, talks and meetups run by the chapter." });
@@ -25,6 +29,9 @@ export default async function EventsPage({ searchParams }: PageProps<"/events">)
     when === "upcoming"
       ? inCategory.filter((e) => new Date(e.endAt) >= now).sort((a, b) => a.startAt.localeCompare(b.startAt))
       : inCategory.filter((e) => new Date(e.endAt) < now);
+  // The soonest upcoming event gets the large feature treatment, unless a filter narrows the list.
+  const featured = when === "upcoming" && !category && list.length > 0 ? list[0] : null;
+  const grid = featured ? list.slice(1) : list;
   const link = (params: { when?: string; category?: string }) => {
     const q = new URLSearchParams();
     const w = params.when ?? when;
@@ -35,24 +42,22 @@ export default async function EventsPage({ searchParams }: PageProps<"/events">)
     return s ? `/events?${s}` : "/events";
   };
 
+  const activeCategory = categories.find((c) => c.slug === category);
   return (
-    <div className="relative isolate">
-      <Rings className="pointer-events-none absolute -right-60 -top-40 -z-10 size-[720px] opacity-40" />
-      <section className="mx-auto grid max-w-7xl gap-6 px-4 pb-10 pt-14 sm:px-6 lg:px-8">
-        <p className="font-mono text-xs uppercase tracking-[0.12em] text-leaf">Events</p>
-        <h1 className="max-w-3xl font-display text-5xl font-extrabold leading-[0.95] tracking-tight sm:text-6xl">
-          {when === "upcoming" ? "What’s coming up" : "What we’ve run"}
-        </h1>
-        <p className="max-w-2xl text-lg text-muted">Workshops, hackathons, talks and meetups. Pick one, show up, build something.</p>
-
-        <div className="flex flex-wrap items-center justify-between gap-4 pt-4">
+    <div className="pb-24">
+      <PageIntro
+        eyebrow="Events"
+        title={when === "upcoming" ? "What’s coming up" : "What we’ve run"}
+        lead="Workshops, hackathons, talks and meetups. Pick one, show up, build something."
+      >
+        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-line pt-6">
           <nav aria-label="Upcoming or past" className="inline-flex rounded-full border border-line bg-surface p-1">
             {(["upcoming", "past"] as const).map((w) => (
               <Link
                 key={w}
                 href={link({ when: w })}
                 aria-current={w === when ? "page" : undefined}
-                className={cn("rounded-full px-4 py-1.5 text-sm text-muted transition-colors hover:text-frost", w === when && "bg-leaf font-semibold text-night hover:text-night")}
+                className={cn("rounded-full px-4 py-1.5 text-sm text-muted transition-colors duration-200 hover:text-frost", w === when && "bg-leaf font-semibold text-night hover:text-night")}
               >
                 {w === "upcoming" ? "Upcoming" : "Past"}
               </Link>
@@ -60,20 +65,37 @@ export default async function EventsPage({ searchParams }: PageProps<"/events">)
           </nav>
           {categories.length > 1 && (
             <nav aria-label="Categories" className="flex flex-wrap gap-2">
-              <Link href={link({ category: "" })} aria-current={!category ? "page" : undefined} className="rounded-full border border-line px-3 py-1.5 text-sm text-muted hover:text-frost aria-[current=page]:border-leaf/50 aria-[current=page]:text-frost">
+              <Link href={link({ category: "" })} aria-current={!category ? "page" : undefined} className={CHIP}>
                 All
               </Link>
               {categories.map((c) => (
-                <Link key={c.slug} href={link({ category: c.slug })} aria-current={category === c.slug ? "page" : undefined} className="rounded-full border border-line px-3 py-1.5 text-sm text-muted hover:text-frost aria-[current=page]:border-leaf/50 aria-[current=page]:text-frost">
+                <Link key={c.slug} href={link({ category: c.slug })} aria-current={category === c.slug ? "page" : undefined} className={CHIP}>
                   {c.name}
                 </Link>
               ))}
             </nav>
           )}
         </div>
-      </section>
+        <p className="mt-5 flex flex-wrap items-center gap-3 text-sm text-muted" role="status">
+          <span>
+            {list.length} {when === "upcoming" ? "upcoming" : "past"} event{list.length === 1 ? "" : "s"}
+            {activeCategory ? ` in ${activeCategory.name}` : ""}
+          </span>
+          {(category || when === "past") && (
+            <Link href="/events" className="link-sweep font-semibold text-leaf">
+              Clear filters
+            </Link>
+          )}
+        </p>
+      </PageIntro>
 
-      <section aria-label={when === "upcoming" ? "Upcoming events" : "Past events"} className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      {featured && (
+        <section aria-label="Next event" className="container-x pb-10">
+          <FeaturedEvent event={featured} timezone={timezone} now={now} priority />
+        </section>
+      )}
+
+      <section aria-label={when === "upcoming" ? "Upcoming events" : "Past events"} className="container-x">
         {list.length === 0 ? (
           <div className="grid justify-items-center gap-3 rounded-3xl border border-dashed border-line px-6 py-16 text-center">
             <p className="font-display text-2xl font-bold">{when === "upcoming" ? "Nothing scheduled right now" : "No past events yet"}</p>
@@ -86,11 +108,11 @@ export default async function EventsPage({ searchParams }: PageProps<"/events">)
               </Link>
             )}
           </div>
-        ) : (
-          <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {list.map((e, i) => (
+        ) : grid.length === 0 ? null : (
+          <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {grid.map((e, i) => (
               <li key={e.id}>
-                <EventCard event={e} timezone={timezone} now={now} priority={i < 3} />
+                <EventCard event={e} timezone={timezone} now={now} priority={!featured && i < 3} />
               </li>
             ))}
           </ul>
