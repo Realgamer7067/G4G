@@ -80,6 +80,7 @@ await db.siteSettings.update({
     tagline: "Learn, build and share with the GeeksforGeeks Student Chapter at VIT Bhopal.",
     // Placeholder addresses read as broken on a live site; the footer hides an empty email.
     ...(/@example\./.test(settings.email) ? { email: "" } : {}),
+    seo: { ...(settings.seo as Record<string, unknown>), titleTemplate: "%s · GFG VIT Bhopal" },
   },
 });
 

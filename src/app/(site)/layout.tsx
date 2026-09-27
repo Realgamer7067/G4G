@@ -16,7 +16,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const s = await getSiteSettings();
   const og = s.seo.ogImage ? ogImage(s.seo.ogImage) : null;
   return {
-    title: { default: s.clubName, template: s.seo.titleTemplate },
+    // absolute: the root layout's own template must not wrap the club name a second time.
+    title: { absolute: s.clubName, template: s.seo.titleTemplate },
     description: s.seo.defaultDescription || s.description,
     applicationName: s.clubName,
     openGraph: {
