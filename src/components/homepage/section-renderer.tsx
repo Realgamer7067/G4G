@@ -10,6 +10,7 @@ import { EventSpotlightSection } from "./sections/event-spotlight";
 import { FeaturedTeamSection } from "./sections/featured-team";
 import { GalleryHighlightsSection } from "./sections/gallery-highlights";
 import { HeroSection } from "./sections/hero";
+import { MarqueeSection } from "./sections/marquee";
 import { SocialSection } from "./sections/social";
 import { SponsorsSection } from "./sections/sponsors";
 import { StatsSection } from "./sections/stats";
@@ -34,7 +35,7 @@ export function SectionRenderer({
         .map((section) => {
           switch (section.type) {
             case "hero":
-              return <HeroSection key={section.id} section={section} socials={socials} />;
+              return <HeroSection key={section.id} section={section} socials={socials} images={images} now={now} timezone={timezone} />;
             case "about":
               return <AboutSection key={section.id} section={section} image={section.content.imageId ? (images[section.content.imageId] ?? null) : null} />;
             case "stats":
@@ -55,6 +56,8 @@ export function SectionRenderer({
               return <GalleryHighlightsSection key={section.id} section={section} />;
             case "sponsors":
               return <SponsorsSection key={section.id} section={section} />;
+            case "marquee":
+              return <MarqueeSection key={section.id} section={section} />;
             default:
               return null;
           }

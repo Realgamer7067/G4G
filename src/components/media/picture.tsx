@@ -1,3 +1,4 @@
+import { preload } from "react-dom";
 import type { PublicImage } from "@/lib/media/public-image";
 import { mediaUrl } from "@/lib/media/urls";
 import { pickFallback, type ImageFormat } from "@/lib/media/variants";
@@ -35,6 +36,11 @@ export function Picture({
       .map((v) => `${mediaUrl(image.storageKey, v.file)} ${v.width}w`)
       .join(", ");
   const fallback = pickFallback(variants);
+  if (priority) {
+    // Lets the browser start fetching an above-the-fold image from the <head>, before it parses the body.
+    const best = SOURCE_TYPES.find(([format]) => srcSet(format));
+    if (best) preload(mediaUrl(image.storageKey, fallback.file), { as: "image", imageSrcSet: srcSet(best[0]), imageSizes: sizes, type: best[1], fetchPriority: "high" });
+  }
 
   return (
     <picture className={className}>

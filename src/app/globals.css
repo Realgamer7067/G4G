@@ -14,6 +14,12 @@
   --color-amber: #f2b84b;
   --color-danger: #f26d6d;
   --color-tile: #eef4ef;
+  /* The one light "paper" surface per page, and its ink. */
+  --color-paper: #eef4ef;
+  --color-ink: #0c1a12;
+  --color-ink-muted: #3f5647;
+
+  --ease-out-expo: cubic-bezier(0.22, 1, 0.36, 1);
 
   --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
@@ -157,6 +163,124 @@ h3 {
   }
 }
 
+/* Page container: max 1280px with 24 / 40 / 64 px gutters. */
+@utility container-x {
+  width: 100%;
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+  @media (width >= 48rem) {
+    padding-inline: 2.5rem;
+  }
+  @media (width >= 80rem) {
+    padding-inline: 4rem;
+  }
+}
+
+/* Text link whose underline sweeps in from the left. */
+@utility link-sweep {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  transition: background-size 0.18s ease-out;
+  &:hover,
+  &:focus-visible {
+    background-size: 100% 1px;
+  }
+}
+
+/* Faint dot grid used behind heroes and closers. */
+@utility bg-dots {
+  background-image: radial-gradient(rgb(147 168 154 / 0.18) 1px, transparent 1.2px);
+  background-size: 22px 22px;
+}
+
+/* Marquee track: two identical halves translate by -50% for a seamless loop. */
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.marquee-track {
+  animation: marquee var(--marquee-duration, 40s) linear infinite;
+}
+.marquee:hover .marquee-track,
+.marquee:focus-within .marquee-track {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+  }
+}
+
+/* Lenis smooth scroll (desktop pointer devices only; see SmoothScroll). */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis:not(.lenis-autoToggle).lenis-stopped {
+  overflow: clip;
+}
+.lenis [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+/* Hero entrance: plays once per visit (HeroIntroOnce adds .hero-static on later client-side visits). */
+/* Intro frames start at 0.01, not 0: Chrome skips fully transparent elements as LCP candidates,
+   which would push LCP onto whatever small text paints last. */
+@keyframes hero-rise {
+  from {
+    opacity: 0.01;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes hero-media {
+  from {
+    opacity: 0.01;
+    transform: scale(1.025);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes hero-chip {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .hero-in-1 {
+    animation: hero-rise 0.44s var(--ease-out-expo) 0s both;
+  }
+  .hero-in-2 {
+    animation: hero-rise 0.52s var(--ease-out-expo) 0.08s both;
+  }
+  .hero-in-3 {
+    animation: hero-rise 0.46s var(--ease-out-expo) 0.18s both;
+  }
+  .hero-media-in {
+    animation: hero-media 0.6s var(--ease-out-expo) both;
+  }
+  .hero-chip-in {
+    animation: hero-chip 0.5s var(--ease-out-expo) 0.55s both;
+  }
+  .hero-static :is(.hero-in-1, .hero-in-2, .hero-in-3, .hero-media-in, .hero-chip-in) {
+    animation: none;
+  }
+}
+
 @keyframes step-in {
   from {
     opacity: 0;
@@ -197,5 +321,14 @@ h3 {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* Motion components render the same markup on server and client; reduced motion and no-JS
+   visitors get the final state here instead (see src/components/motion/reveal.tsx). */
+@media (prefers-reduced-motion: reduce) {
+  [data-motion] {
+    opacity: 1 !important;
+    transform: none !important;
   }
 }

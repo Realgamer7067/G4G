@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
-import { Rings } from "@/components/site/rings";
 import { ANNOUNCEMENT_PRIORITY_LABELS } from "@/lib/announcements/schema";
 import { richTextToPlain, sanitizeRichText } from "@/lib/content/sanitize";
 import { getPublicAnnouncement } from "@/lib/data/announcements";
@@ -32,8 +31,8 @@ export default async function AnnouncementPage({ params }: PageProps<"/announcem
 
   return (
     <article className="relative isolate">
-      <Rings className="pointer-events-none absolute -left-72 -top-24 -z-10 size-[760px] opacity-35" />
-      <div className="mx-auto grid max-w-3xl gap-6 px-4 py-14 sm:px-6 lg:px-8">
+      <div aria-hidden="true" className="bg-dots pointer-events-none absolute inset-x-0 top-0 -z-10 h-[32rem] [mask-image:radial-gradient(ellipse_60%_70%_at_20%_0%,#000,transparent_70%)]" />
+      <div className="container-x grid max-w-3xl gap-6 pb-24 pt-10">
         <Link href="/announcements" className="inline-flex w-fit items-center gap-1.5 text-sm text-muted hover:text-frost">
           <ArrowLeft className="size-4" aria-hidden="true" /> All announcements
         </Link>
@@ -41,7 +40,7 @@ export default async function AnnouncementPage({ params }: PageProps<"/announcem
           <span className="font-mono text-[11px] uppercase tracking-[0.08em] text-leaf">{ANNOUNCEMENT_PRIORITY_LABELS[announcement.priority]}</span>
           <span className="font-mono text-[11px] text-muted">{formatInZone(announcement.publishAt, site.timezone, { day: "numeric", month: "short", year: "numeric" })}</span>
         </div>
-        <h1 className="font-display text-4xl font-extrabold leading-[0.98] tracking-tight sm:text-5xl">{announcement.title}</h1>
+        <h1 className="hero-in-2 font-display text-4xl font-extrabold leading-[0.98] tracking-[-0.03em] sm:text-6xl">{announcement.title}</h1>
         {announcement.summary && <p className="text-lg text-muted">{announcement.summary}</p>}
         {content && <div className="rich-text max-w-[68ch]" dangerouslySetInnerHTML={{ __html: content }} />}
         {announcement.linkUrl && (

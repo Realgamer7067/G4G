@@ -1,6 +1,6 @@
 import { ArrowUpRight } from "lucide-react";
 import { Picture } from "@/components/media/picture";
-import { Rings } from "@/components/site/rings";
+import { PageIntro } from "@/components/site/page-intro";
 import { Spotlight } from "@/components/site/spotlight";
 import { assertPageEnabled } from "@/lib/data/pages";
 import { getSiteSettings } from "@/lib/data/site";
@@ -28,14 +28,14 @@ export default async function SponsorsPage() {
 
   return (
     <div className="relative isolate">
-      <Rings className="pointer-events-none absolute -right-60 -top-40 -z-10 size-[720px] opacity-40" />
-      <section className="mx-auto grid max-w-7xl gap-5 px-4 pb-12 pt-14 sm:px-6 lg:px-8">
-        <p className="font-mono text-xs uppercase tracking-[0.12em] text-leaf">{page.navLabel}</p>
-        <h1 className="max-w-3xl font-display text-5xl font-extrabold leading-[0.95] tracking-tight sm:text-6xl">The people backing our builders</h1>
-        <p className="max-w-2xl text-lg text-muted">Every workshop, prize and pizza slice at our events is made possible by these organisations.</p>
-      </section>
+      <PageIntro
+        layout="stacked"
+        eyebrow={page.navLabel}
+        title="The people backing our builders"
+        lead="Every workshop, prize and pizza slice at our events is made possible by these organisations."
+      />
 
-      <div className="mx-auto grid max-w-7xl gap-14 px-4 sm:px-6 lg:px-8">
+      <div className="container-x grid gap-14">
         {groups.length === 0 ? (
           <p className="rounded-3xl border border-dashed border-line px-6 py-16 text-center text-muted">Our partners will be listed here soon.</p>
         ) : (

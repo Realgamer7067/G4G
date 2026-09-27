@@ -57,12 +57,12 @@ export function AnnouncementBanner({ announcement }: { announcement: BannerAnnou
   const external = Boolean(announcement.linkUrl);
 
   return (
-    <aside aria-label="Announcement" className={cn("border-b px-4 py-2.5 text-sm sm:px-6 lg:px-8", TONE[announcement.priority])}>
-      <div className="mx-auto flex max-w-7xl items-center gap-3">
+    <aside aria-label="Announcement" className={cn("border-b py-2.5 text-sm", TONE[announcement.priority])}>
+      <div className="container-x flex items-center gap-3">
         <p className="min-w-0 flex-1 truncate">
           <Link href={href} target={external ? "_blank" : undefined} rel={external ? "noopener noreferrer" : undefined} className="hover:underline">
             <span className="font-semibold">{announcement.title}</span>
-            {announcement.summary && <span className="text-muted"> — {announcement.summary}</span>}
+            {announcement.summary && <span className="text-muted"> · {announcement.summary}</span>}
           </Link>
         </p>
         <button type="button" aria-label="Dismiss announcement" onClick={dismiss} className="shrink-0 rounded-md p-1 text-muted hover:bg-raised hover:text-frost">

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { Lightbox } from "@/components/gallery/lightbox";
 import { assertPageEnabled } from "@/lib/data/pages";
 import { getPublicAlbum } from "@/lib/data/gallery";
@@ -20,17 +21,19 @@ export default async function GalleryAlbumPage({ params }: PageProps<"/gallery/[
   if (!album) notFound();
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-      <Link href="/gallery" className="text-sm text-leaf hover:underline">
-        ← All albums
+    <div className="container-x pb-24 pt-10">
+      <Link href="/gallery" className="group inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-frost">
+        <ArrowLeft className="size-4 transition-transform duration-200 group-hover:-translate-x-0.5" aria-hidden="true" /> All albums
       </Link>
-      <header className="mt-4 grid gap-3">
-        <h1 className="font-display text-4xl font-extrabold tracking-tight sm:text-5xl">{album.title}</h1>
-        {album.description && <p className="max-w-2xl text-lg text-muted">{album.description}</p>}
-        <p className="text-sm text-muted">
-          {album.imageCount} photo{album.imageCount === 1 ? "" : "s"}
-          {album.date ? ` · ${new Date(album.date).toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" })}` : ""}
-        </p>
+      <header className="mt-8 grid gap-4 lg:grid-cols-[1.4fr_1fr] lg:items-end lg:gap-16">
+        <h1 className="hero-in-2 font-display text-5xl font-extrabold leading-[0.95] tracking-[-0.035em] sm:text-6xl">{album.title}</h1>
+        <div className="hero-in-3 grid gap-3">
+          {album.description && <p className="text-lg text-muted">{album.description}</p>}
+          <p className="font-mono text-xs uppercase tracking-[0.12em] text-muted">
+            {album.imageCount} photo{album.imageCount === 1 ? "" : "s"}
+            {album.date ? ` · ${new Date(album.date).toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" })}` : ""}
+          </p>
+        </div>
       </header>
 
       {album.images.length === 0 ? (

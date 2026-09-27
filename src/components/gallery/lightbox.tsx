@@ -2,12 +2,16 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { Picture } from "@/components/media/picture";
 import type { GalleryImageDTO } from "@/lib/data/gallery";
 import { wrapIndex } from "@/lib/gallery/lightbox";
 
 export function Lightbox({ images, albumTitle }: { images: GalleryImageDTO[]; albumTitle: string }) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  // Direction of the last step, so the incoming photo slides in from the side it came from.
+  const [direction, setDirection] = useState<1 | -1>(1);
+  const reduce = useReducedMotion();
   const dialog = useRef<HTMLDialogElement>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
 
@@ -24,6 +28,7 @@ export function Lightbox({ images, albumTitle }: { images: GalleryImageDTO[]; al
   }
 
   function go(delta: 1 | -1) {
+    setDirection(delta);
     setOpenIndex((i) => (i === null ? i : wrapIndex(i, images.length, delta)));
   }
 
@@ -34,6 +39,7 @@ export function Lightbox({ images, albumTitle }: { images: GalleryImageDTO[]; al
       if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
       e.preventDefault();
       const delta = e.key === "ArrowRight" ? 1 : -1;
+      setDirection(delta);
       setOpenIndex((i) => (i === null ? i : wrapIndex(i, images.length, delta)));
     }
     window.addEventListener("keydown", onKeyDown);
@@ -44,16 +50,21 @@ export function Lightbox({ images, albumTitle }: { images: GalleryImageDTO[]; al
 
   return (
     <>
-      <div className="mt-8 columns-1 gap-4 sm:columns-2 lg:columns-3 [&>*]:mb-4 [&>*]:break-inside-avoid">
+      <div className="mt-12 columns-1 gap-4 sm:columns-2 lg:columns-3 [&>*]:mb-4 [&>*]:break-inside-avoid">
         {images.map((img, i) => (
           <button
             key={img.id}
             type="button"
             onClick={(e) => open(i, e.currentTarget)}
             aria-label={img.caption || img.image.alt || `Photo ${i + 1} of ${images.length}, from ${albumTitle}`}
-            className="block w-full overflow-hidden rounded-2xl border border-line bg-tile transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mint"
+            className="reveal group block w-full overflow-hidden rounded-[20px] border border-line bg-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mint"
           >
-            <Picture image={img.image} sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" alt={img.caption || img.image.alt} imgClassName="w-full object-cover" />
+            <Picture
+              image={img.image}
+              sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+              alt={img.caption || img.image.alt}
+              imgClassName="w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03] motion-reduce:transform-none"
+            />
           </button>
         ))}
       </div>
@@ -66,7 +77,7 @@ export function Lightbox({ images, albumTitle }: { images: GalleryImageDTO[]; al
           close();
         }}
         onClose={() => setOpenIndex(null)}
-        className="m-auto w-[min(1100px,calc(100vw-2rem))] max-h-[calc(100vh-2rem)] rounded-2xl border border-line bg-night p-0 text-frost backdrop:bg-night/90 motion-safe:transition-opacity motion-reduce:transition-none"
+        className="m-auto w-[min(1100px,calc(100vw-2rem))] max-h-[calc(100vh-2rem)] rounded-[24px] border border-line bg-night p-0 text-frost backdrop:bg-night/90 motion-safe:transition-opacity motion-reduce:transition-none"
       >
         {current && (
           <div className="grid gap-3 p-4">
@@ -87,7 +98,41 @@ export function Lightbox({ images, albumTitle }: { images: GalleryImageDTO[]; al
               >
                 <ChevronLeft className="size-5" aria-hidden="true" />
               </button>
-              <Picture image={current.image} sizes="1100px" alt={current.caption || current.image.alt} priority className="max-h-[70vh] w-full" imgClassName="mx-auto max-h-[70vh] w-auto object-contain" />
+              <div className="grid w-full overflow-hidden">
+                <AnimatePresence initial={false} custom={direction} mode="popLayout">
+                  <motion.div
+                    key={current.id}
+                    custom={direction}
+                    className="col-start-1 row-start-1 touch-pan-y"
+                    variants={{
+                      enter: (d: number) => ({ opacity: 0, x: reduce ? 0 : d * 60 }),
+                      shown: { opacity: 1, x: 0 },
+                      exit: (d: number) => ({ opacity: 0, x: reduce ? 0 : d * -60 }),
+                    }}
+                    initial="enter"
+                    animate="shown"
+                    exit="exit"
+                    transition={{ duration: reduce ? 0.12 : 0.32, ease: [0.22, 1, 0.36, 1] }}
+                    drag={images.length > 1 ? "x" : false}
+                    dragConstraints={{ left: 0, right: 0 }}
+                    dragElastic={0.35}
+                    onDragEnd={(_, info) => {
+                      // Swipe: a short fast flick or a long drag moves to the neighbouring photo.
+                      if (info.offset.x < -60 || info.velocity.x < -400) go(1);
+                      else if (info.offset.x > 60 || info.velocity.x > 400) go(-1);
+                    }}
+                  >
+                    <Picture
+                      image={current.image}
+                      sizes="1100px"
+                      alt={current.caption || current.image.alt}
+                      priority
+                      className="pointer-events-none block max-h-[70vh] w-full select-none"
+                      imgClassName="mx-auto max-h-[70vh] w-auto object-contain"
+                    />
+                  </motion.div>
+                </AnimatePresence>
+              </div>
               <button
                 type="button"
                 onClick={() => go(1)}

@@ -10,6 +10,7 @@ import { EventSpotlightForm } from "./section-forms/event-spotlight";
 import { FeaturedTeamForm } from "./section-forms/featured-team";
 import { GalleryHighlightsForm } from "./section-forms/gallery-highlights";
 import { HeroForm } from "./section-forms/hero";
+import { MarqueeForm } from "./section-forms/marquee";
 import { SocialForm } from "./section-forms/social";
 import { SponsorsForm } from "./section-forms/sponsors";
 import { StatsForm } from "./section-forms/stats";
@@ -45,7 +46,7 @@ export function Inspector({
       return (
         <div className="rounded-2xl border border-line bg-surface p-4">
           {common}
-          <HeroForm section={section} onUpdate={onUpdate} />
+          <HeroForm section={section} onUpdate={onUpdate} images={images} onImageResolved={onImageResolved} />
         </div>
       );
     case "about":
@@ -116,6 +117,12 @@ export function Inspector({
         <div className="rounded-2xl border border-line bg-surface p-4">
           {common}
           <SponsorsForm section={section} onUpdate={onUpdate} />
+        </div>
+      );
+    case "marquee":
+      return (
+        <div className="rounded-2xl border border-line bg-surface p-4">
+          <MarqueeForm section={section} onUpdate={onUpdate} />
         </div>
       );
     default:

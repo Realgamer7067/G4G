@@ -30,12 +30,12 @@ export default async function TeamArchivePage({ params }: PageProps<"/team/[term
   if (!data) notFound();
 
   return (
-    <div className="mx-auto grid max-w-7xl gap-14 px-4 py-16 sm:px-6 lg:px-8">
+    <div className="container-x grid gap-16 pb-24 pt-10">
       <header className="grid gap-3">
         <Link href="/team" className="inline-flex w-fit items-center gap-1.5 text-sm text-muted hover:text-frost">
           <ArrowLeft className="size-4" aria-hidden="true" /> Current team
         </Link>
-        <h1 className="max-w-3xl font-display text-5xl font-extrabold leading-[0.95] tracking-tight sm:text-6xl">{data.term.label} team</h1>
+        <h1 className="hero-in-2 mt-6 max-w-4xl font-display text-5xl font-extrabold leading-[0.92] tracking-[-0.035em] sm:text-7xl">{data.term.label} team</h1>
       </header>
       <TeamGroups members={data.members} />
     </div>

@@ -7,7 +7,8 @@ import { ShareButtons } from "@/components/events/share-buttons";
 import { StatusPill } from "@/components/events/status-pill";
 import { Picture } from "@/components/media/picture";
 import { JsonLd } from "@/components/seo/json-ld";
-import { Rings } from "@/components/site/rings";
+import { Magnetic } from "@/components/motion/magnetic";
+import { LinkButton } from "@/components/ui/link-button";
 import { sanitizeRichText, richTextToPlain } from "@/lib/content/sanitize";
 import { assertPageEnabled } from "@/lib/data/pages";
 import { getPublicEvent, statsOf, statusInputOf } from "@/lib/data/events";
@@ -82,33 +83,38 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
             : {}),
         }}
       />
-      <Rings className="pointer-events-none absolute -left-72 -top-24 -z-10 size-[760px] opacity-35" />
+      <div aria-hidden="true" className="bg-dots pointer-events-none absolute inset-x-0 top-0 -z-10 h-[40rem] [mask-image:radial-gradient(ellipse_70%_70%_at_20%_0%,#000,transparent_70%)]" />
 
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 pb-8 pt-8 sm:px-6 lg:px-8">
-        <Link href="/events" className="inline-flex w-fit items-center gap-1.5 text-sm text-muted hover:text-frost">
-          <ArrowLeft className="size-4" aria-hidden="true" /> All events
+      <div className="container-x grid gap-10 pb-8 pt-8">
+        <Link href="/events" className="group inline-flex w-fit items-center gap-1.5 text-sm text-muted transition-colors hover:text-frost">
+          <ArrowLeft className="size-4 transition-transform duration-200 group-hover:-translate-x-0.5" aria-hidden="true" /> All events
         </Link>
 
         {event.lifecycle === "CANCELLED" && (
-          <p role="status" className="rounded-2xl border border-danger/30 bg-danger/10 p-4 text-danger">
+          <p role="status" className="rounded-2xl border border-danger/40 bg-danger/10 p-5 font-display text-lg font-bold text-danger">
             This event has been cancelled. We&apos;re sorry for the change of plans.
           </p>
         )}
 
         <header className="grid gap-8 lg:grid-cols-[1.25fr_1fr] lg:items-center">
-          <div className="overflow-hidden rounded-3xl border border-line bg-night shadow-[0_40px_80px_-40px_rgb(0_0_0/0.9)]">
+          <div className="hero-media-in group overflow-hidden rounded-[28px] border border-line bg-night shadow-[0_40px_80px_-40px_rgb(0_0_0/0.9)]">
             {event.poster ? (
-              <Picture image={event.poster} sizes="(min-width: 1024px) 720px, 100vw" priority imgClassName="aspect-video size-full object-cover" />
+              <Picture
+                image={event.poster}
+                sizes="(min-width: 1024px) 720px, 100vw"
+                priority
+                imgClassName="aspect-video size-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03] motion-reduce:transform-none"
+              />
             ) : (
               <div aria-hidden="true" className="aspect-video bg-[radial-gradient(circle_at_80%_20%,rgb(92_201_123/0.45),transparent_45%),radial-gradient(circle_at_10%_110%,rgb(47_141_70/0.5),transparent_50%)]" />
             )}
           </div>
-          <div className="grid content-start gap-5">
+          <div className="hero-in-2 grid content-start gap-5">
             <div className="flex flex-wrap items-center gap-3">
               <StatusPill status={status} />
               {event.category && <span className="font-mono text-xs uppercase tracking-[0.12em] text-leaf">{event.category.name}</span>}
             </div>
-            <h1 className="font-display text-4xl font-extrabold leading-[0.98] tracking-tight sm:text-5xl">{event.title}</h1>
+            <h1 className="font-display text-4xl font-extrabold leading-[0.98] tracking-[-0.03em] sm:text-6xl">{event.title}</h1>
             {event.tagline && <p className="text-lg text-muted">{event.tagline}</p>}
             <ul className="grid gap-2 text-sm">
               <li className="flex items-center gap-2.5">
@@ -134,25 +140,21 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
 
             <div className="flex flex-wrap items-center gap-3 pt-1">
               {registration.open && registerHref && event.registrationMode === "EXTERNAL" && (
-                <a
-                  href={registerHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex h-12 items-center gap-2 rounded-full bg-leaf px-6 font-semibold text-night shadow-[0_14px_40px_-14px_rgb(92_201_123/0.8)] transition-transform hover:-translate-y-0.5"
-                >
-                  Register now <ArrowUpRight className="size-4" aria-hidden="true" />
-                </a>
+                <Magnetic>
+                  <LinkButton href={registerHref} size="lg">
+                    Register now <ArrowUpRight className="size-4" aria-hidden="true" />
+                  </LinkButton>
+                </Magnetic>
               )}
               {registration.open && registerHref && event.registrationMode === "FORM" && (
-                <Link
-                  href={registerHref}
-                  className="inline-flex h-12 items-center gap-2 rounded-full bg-gradient-to-r from-leaf to-mint px-6 font-semibold text-night shadow-[0_14px_40px_-14px_rgb(92_201_123/0.8)] transition-transform hover:-translate-y-0.5"
-                >
-                  Join event <ArrowUpRight className="size-4" aria-hidden="true" />
-                </Link>
+                <Magnetic>
+                  <LinkButton href={registerHref} size="lg">
+                    Join event <ArrowUpRight className="size-4" aria-hidden="true" />
+                  </LinkButton>
+                </Magnetic>
               )}
               {event.lifecycle === "PUBLISHED" && new Date(event.endAt) > now && (
-                <a href={`/events/${event.slug}/calendar.ics`} className="inline-flex h-12 items-center gap-2 rounded-full border border-line px-5 text-sm hover:border-leaf/40">
+                <a href={`/events/${event.slug}/calendar.ics`} className="inline-flex h-12 items-center gap-2 rounded-full border border-line px-5 text-sm font-semibold transition-colors duration-200 hover:border-leaf/40 hover:bg-raised">
                   <CalendarPlus className="size-4" aria-hidden="true" /> Add to calendar
                 </a>
               )}
@@ -165,7 +167,7 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
         </header>
       </div>
 
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-8 sm:px-6 lg:grid-cols-[1.6fr_1fr] lg:px-8">
+      <div className="container-x grid gap-10 py-8 lg:grid-cols-[1.6fr_1fr]">
         <div className="grid content-start gap-10">
           {description && (
             <section aria-labelledby="about" className="reveal grid gap-4">
@@ -273,7 +275,7 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
       </div>
 
       {sponsorGroups.length > 0 && (
-        <section aria-labelledby="sponsors" className="mx-auto grid max-w-7xl gap-6 px-4 py-10 sm:px-6 lg:px-8">
+        <section aria-labelledby="sponsors" className="container-x grid gap-6 py-10">
           <h2 id="sponsors" className="font-display text-2xl font-bold">
             Made possible by
           </h2>
@@ -306,6 +308,26 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
             ))}
           </div>
         </section>
+      )}
+      {registration.open && registerHref && (
+        <>
+          {/* Keeps the register action in reach on phones once the header CTA scrolls away. */}
+          <div aria-hidden="true" className="h-24 lg:hidden" />
+          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-night/85 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl lg:hidden">
+            <div className="mx-auto flex max-w-xl items-center justify-between gap-3">
+              <div className="grid min-w-0">
+                <p className="truncate text-sm font-semibold">{event.title}</p>
+                <p className="truncate text-xs text-muted">
+                  {registration.spotsLeft !== null ? `${registration.spotsLeft} seats left · ` : ""}
+                  {when.date}
+                </p>
+              </div>
+              <LinkButton href={registerHref} className="shrink-0">
+                {event.registrationMode === "FORM" ? "Join" : "Register"}
+              </LinkButton>
+            </div>
+          </div>
+        </>
       )}
     </article>
   );

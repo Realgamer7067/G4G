@@ -2,6 +2,7 @@ import type { PrismaClient } from "@/generated/prisma/client";
 import { hashPassword, passwordProblem } from "@/lib/auth/password";
 import { SUPER_ADMIN_ROLE_KEY } from "@/lib/rbac/roles";
 import { ensureRolePresets, syncPermissions } from "@/lib/rbac/sync";
+import { homepageTemplate } from "@/lib/homepage/template";
 import { slugify } from "@/lib/utils/slug";
 import { CATEGORY_DEFAULTS, DOMAIN_DEFAULTS, PAGE_DEFAULTS, SITE_DEFAULTS } from "./defaults";
 
@@ -22,6 +23,11 @@ export async function runSeed(db: PrismaClient, env: NodeJS.ProcessEnv): Promise
   for (const [order, name] of CATEGORY_DEFAULTS.entries()) {
     const slug = slugify(name);
     await db.eventCategory.upsert({ where: { slug }, create: { name, slug, order }, update: {} });
+  }
+
+  // Fresh installs get the recommended homepage as a DRAFT to review in the builder. Never auto-published.
+  if ((await db.homepageRevision.count()) === 0) {
+    await db.homepageRevision.create({ data: { status: "DRAFT", sections: homepageTemplate({ reviewNote: true }) } });
   }
 }
 

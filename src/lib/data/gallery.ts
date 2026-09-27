@@ -65,16 +65,21 @@ export function getPublicAlbum(slug: string): Promise<GalleryAlbumDetailDTO | nu
   return unstable_cache(() => loadPublicAlbum(slug), ["public-gallery-album", slug], { tags: [TAGS.gallery] })();
 }
 
-async function loadGalleryHighlights(mode: "latest" | "album", albumId: string | null, maxItems: number): Promise<GalleryImageDTO[]> {
+export type GalleryHighlightDTO = GalleryImageDTO & { albumSlug: string; albumTitle: string };
+
+async function loadGalleryHighlights(mode: "latest" | "album", albumId: string | null, maxItems: number): Promise<GalleryHighlightDTO[]> {
   const rows = await db.galleryImage.findMany({
     where: mode === "album" && albumId ? { albumId, album: { isPublished: true } } : { album: { isPublished: true } },
     orderBy: { createdAt: "desc" },
     take: maxItems,
-    include: { upload: { select: publicImageSelect } },
+    include: { upload: { select: publicImageSelect }, album: { select: { slug: true, title: true } } },
   });
-  return rows.map(toImageDTO).filter((i): i is GalleryImageDTO => i !== null);
+  return rows.flatMap((row) => {
+    const dto = toImageDTO(row);
+    return dto ? [{ ...dto, albumSlug: row.album.slug, albumTitle: row.album.title }] : [];
+  });
 }
 
-export function getGalleryHighlights(mode: "latest" | "album", albumId: string | null, maxItems: number): Promise<GalleryImageDTO[]> {
+export function getGalleryHighlights(mode: "latest" | "album", albumId: string | null, maxItems: number): Promise<GalleryHighlightDTO[]> {
   return unstable_cache(() => loadGalleryHighlights(mode, albumId, maxItems), ["gallery-highlights", mode, albumId ?? "", String(maxItems)], { tags: [TAGS.gallery] })();
 }
