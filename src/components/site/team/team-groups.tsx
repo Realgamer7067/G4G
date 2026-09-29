@@ -2,6 +2,7 @@ import { SocialIcon } from "@/components/site/social-icons";
 import { MemberPortrait } from "@/components/site/team/member-portrait";
 import type { PublicTeamMember } from "@/lib/data/team";
 import { groupByDomain, groupByTier, teamMemberLinkList } from "@/lib/team/schema";
+import { cn } from "@/lib/utils/cn";
 
 function MemberCard({ member, priority = false }: { member: PublicTeamMember; priority?: boolean }) {
   const links = teamMemberLinkList(member.links);
@@ -35,42 +36,52 @@ function MemberCard({ member, priority = false }: { member: PublicTeamMember; pr
   );
 }
 
-/** Renders every non-empty tier in priority order; Domain Lead and Member tiers are subgrouped by domain. */
+const LEADERSHIP_TIERS = new Set(["FACULTY", "LEAD", "CORE"]);
+const GRID = "grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 lg:grid-cols-3 xl:grid-cols-4";
+
+/**
+ * Faculty, chapter leads and core members share one "Chapter leadership" grid; everyone else is
+ * grouped by team (domain) with that team's lead first, so a lead never sits alone in its own row.
+ */
 export function TeamGroups({ members }: { members: PublicTeamMember[] }) {
-  const tierGroups = groupByTier(members);
-  if (tierGroups.length === 0) {
+  const tiers = groupByTier(members);
+  if (tiers.length === 0) {
     return (
       <p className="rounded-3xl border border-dashed border-line px-6 py-16 text-center text-muted">No members recorded for this term.</p>
     );
   }
+  const leadership = tiers.filter((g) => LEADERSHIP_TIERS.has(g.tier)).flatMap((g) => g.members);
+  const teams = groupByDomain(members.filter((m) => !LEADERSHIP_TIERS.has(m.tier))).map((g) => ({
+    ...g,
+    members: [...g.members].sort((a, b) => Number(b.tier === "DOMAIN_LEAD") - Number(a.tier === "DOMAIN_LEAD")),
+  }));
+
   return (
     <div className="grid gap-20">
-      {tierGroups.map((g, gi) => (
-        <section key={g.tier} aria-labelledby={`tier-${g.tier}`} className="grid gap-6">
-          <h2 id={`tier-${g.tier}`} className="border-b border-line pb-4 font-display text-3xl font-extrabold tracking-[-0.02em]">
-            {g.label}
+      {leadership.length > 0 && (
+        <section aria-labelledby="team-leadership" className="grid gap-6">
+          <h2 id="team-leadership" className="border-b border-line pb-4 font-display text-3xl font-extrabold tracking-[-0.02em]">
+            Chapter leadership
           </h2>
-          {g.tier === "DOMAIN_LEAD" || g.tier === "MEMBER" ? (
-            <div className="grid gap-10">
-              {groupByDomain(g.members).map((dg) => (
-                <div key={dg.domain?.id ?? "other"} className="grid gap-4">
-                  <h3 className="font-mono text-xs uppercase tracking-[0.1em] text-muted">{dg.domain?.name ?? "Other"}</h3>
-                  <ul className="grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 lg:grid-cols-3 xl:grid-cols-4">
-                    {dg.members.map((m) => (
-                      <MemberCard key={m.id} member={m} />
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <ul className="grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 lg:grid-cols-3 xl:grid-cols-4">
-              {g.members.map((m, i) => (
-                // The first portraits of the first tier are above the fold on phones and desktops.
-                <MemberCard key={m.id} member={m} priority={gi === 0 && i < 2} />
-              ))}
-            </ul>
-          )}
+          <ul className={cn(GRID, leadership.length === 5 && "xl:grid-cols-5")}>
+            {leadership.map((m, i) => (
+              // The first portraits are above the fold on phones and desktops.
+              <MemberCard key={m.id} member={m} priority={i < 2} />
+            ))}
+          </ul>
+        </section>
+      )}
+      {teams.map((g) => (
+        <section key={g.domain?.id ?? "other"} aria-labelledby={`team-${g.domain?.id ?? "other"}`} className="grid gap-6">
+          <h2 id={`team-${g.domain?.id ?? "other"}`} className="flex items-baseline justify-between gap-4 border-b border-line pb-4 font-display text-3xl font-extrabold tracking-[-0.02em]">
+            {g.domain ? `${g.domain.name} team` : "Members"}
+            <span className="font-mono text-xs font-normal uppercase tracking-[0.1em] text-muted">{g.members.length} people</span>
+          </h2>
+          <ul className={GRID}>
+            {g.members.map((m) => (
+              <MemberCard key={m.id} member={m} />
+            ))}
+          </ul>
         </section>
       ))}
     </div>

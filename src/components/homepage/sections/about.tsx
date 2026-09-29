@@ -16,6 +16,25 @@ export async function AboutSection({ section, image }: { section: SectionOfType<
   if (!c.body && !heading && c.activities.length === 0) return null;
   const aboutLive = isPageLive(await getPageSetting("ABOUT"));
   const paragraphs = c.body.split(/\r?\n/).filter(Boolean);
+  const activityList =
+    c.activities.length > 0 ? (
+      <Stagger as="ul" className="grid gap-px overflow-hidden rounded-3xl border border-ink/10 bg-ink/10">
+        {c.activities.map((a) => {
+          const Icon = ACTIVITY_ICONS[a.icon];
+          return (
+            <StaggerItem as="li" key={a.id} className="group flex gap-4 bg-paper p-5 transition-colors duration-200 hover:bg-white/60 sm:p-6">
+              <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-ink text-leaf transition-transform duration-300 group-hover:-rotate-6">
+                <Icon className="size-5" aria-hidden="true" />
+              </span>
+              <span className="grid gap-1">
+                <span className="font-display text-lg font-bold tracking-tight">{a.title}</span>
+                {a.description && <span className="text-[15px] leading-relaxed text-ink-muted">{a.description}</span>}
+              </span>
+            </StaggerItem>
+          );
+        })}
+      </Stagger>
+    ) : null;
 
   return (
     <section id={section.anchorId} className="bg-paper text-ink">
@@ -29,24 +48,7 @@ export async function AboutSection({ section, image }: { section: SectionOfType<
               ))}
             </div>
           )}
-          {c.activities.length > 0 && (
-            <Stagger as="ul" className="grid gap-px overflow-hidden rounded-3xl border border-ink/10 bg-ink/10">
-              {c.activities.map((a) => {
-                const Icon = ACTIVITY_ICONS[a.icon];
-                return (
-                  <StaggerItem as="li" key={a.id} className="group flex gap-4 bg-paper p-5 transition-colors duration-200 hover:bg-white/60 sm:p-6">
-                    <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-ink text-leaf transition-transform duration-300 group-hover:-rotate-6">
-                      <Icon className="size-5" aria-hidden="true" />
-                    </span>
-                    <span className="grid gap-1">
-                      <span className="font-display text-lg font-bold tracking-tight">{a.title}</span>
-                      {a.description && <span className="text-[15px] leading-relaxed text-ink-muted">{a.description}</span>}
-                    </span>
-                  </StaggerItem>
-                );
-              })}
-            </Stagger>
-          )}
+          {image && activityList}
           {aboutLive && (
             <Link href="/about" className="group inline-flex w-fit items-center gap-2 font-semibold text-ink">
               <span className="link-sweep">More about us</span>
@@ -54,10 +56,17 @@ export async function AboutSection({ section, image }: { section: SectionOfType<
             </Link>
           )}
         </Reveal>
+        {!image && activityList && <Reveal delay={0.1}>{activityList}</Reveal>}
         {image && (
           <Reveal delay={0.1} className="relative">
             <div aria-hidden="true" className="absolute -inset-3 -z-10 rotate-2 rounded-[32px] bg-ink/8" />
-            <Picture image={image} sizes="(min-width: 1024px) 520px, 100vw" alt={image.alt} className="overflow-hidden rounded-[28px]" imgClassName="aspect-[4/5] w-full object-cover" />
+            <Picture
+              image={image}
+              sizes="(min-width: 1024px) 520px, 100vw"
+              alt={image.alt}
+              className="overflow-hidden rounded-[28px]"
+              imgClassName="aspect-[4/5] w-full object-cover"
+            />
           </Reveal>
         )}
       </div>

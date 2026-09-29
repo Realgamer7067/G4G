@@ -7,6 +7,7 @@ import { dateBadge, formatEventWhen } from "@/lib/events/format";
 import { SPONSOR_TIER_LABELS } from "@/lib/events/schema";
 import { deriveEventStatus } from "@/lib/events/status";
 import { cn } from "@/lib/utils/cn";
+import { PosterImage } from "./poster-image";
 import { StatusPill } from "./status-pill";
 
 export function EventCard({ event, timezone, now, priority = false }: { event: EventCardDTO; timezone: string; now: Date; priority?: boolean }) {
@@ -20,12 +21,12 @@ export function EventCard({ event, timezone, now, priority = false }: { event: E
       <article className="relative flex h-full flex-col overflow-hidden rounded-3xl border border-line bg-surface transition-[transform,border-color,box-shadow] duration-300 group-hover:-translate-y-1 group-hover:border-leaf/30 group-hover:shadow-[0_30px_60px_-30px_rgb(0_0_0/0.8)] motion-reduce:transform-none">
         <div className="relative aspect-video overflow-hidden bg-night">
           {event.poster ? (
-            <Picture
+            <PosterImage
               image={event.poster}
               sizes="(min-width: 1024px) 400px, (min-width: 640px) 50vw, 100vw"
-              alt=""
               priority={priority}
-              imgClassName="size-full object-cover transition-transform duration-500 group-hover:scale-[1.04] motion-reduce:transform-none"
+              className="size-full"
+              imgClassName="transition-transform duration-500 group-hover:scale-[1.04] motion-reduce:transform-none"
             />
           ) : (
             <div aria-hidden="true" className="size-full bg-[radial-gradient(circle_at_80%_20%,rgb(92_201_123/0.45),transparent_45%),radial-gradient(circle_at_10%_110%,rgb(47_141_70/0.5),transparent_50%)]" />

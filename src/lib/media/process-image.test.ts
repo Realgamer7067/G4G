@@ -29,8 +29,13 @@ describe("processImage", () => {
   });
 
   it("centre-crops to the purpose's aspect ratio when no crop is given", async () => {
-    const result = await processImage(await makeImage(2000, 1600), "POSTER");
-    expect([result.width, result.height]).toEqual([1600, 900]);
+    const result = await processImage(await makeImage(1000, 600), "TEAM");
+    expect([result.width, result.height]).toEqual([600, 600]);
+  });
+
+  it("keeps a poster's own shape, capping the longest edge", async () => {
+    const result = await processImage(await makeImage(2480, 3508), "POSTER");
+    expect([result.width, result.height]).toEqual([1414, 2000]);
   });
 
   it("honours an explicit crop and never upscales", async () => {
@@ -41,7 +46,7 @@ describe("processImage", () => {
 
   it("rejects posters that are too small", async () => {
     await expect(processImage(await makeImage(800, 450), "POSTER")).rejects.toThrow(
-      "This image is 800 × 450. Posters need at least 960 × 540.",
+      "This image is 800 × 450. Posters need a shortest side of at least 540px.",
     );
   });
 

@@ -29,10 +29,11 @@ type PurposeRule = {
 };
 
 export const PURPOSE_RULES: Record<ImagePurpose, PurposeRule> = {
+  // Any shape: event posters are often square or A4 portrait. Cards show them contained over a blurred fill.
   POSTER: {
-    label: "Posters", aspect: 16 / 9, aspectLabel: "16:9", minWidth: 960, minHeight: 540, maxWidth: 1600,
+    label: "Posters", minShortEdge: 540, maxWidth: 1600, maxEdge: 2000,
     widths: [400, 800, 1200, 1600], formats: ["avif", "webp"], og: { width: 1200 },
-    recommended: "Landscape 16:9. Recommended 1600 × 900, minimum 960 × 540.",
+    recommended: "Any shape: landscape, square or A4 portrait. Shortest side at least 540px.",
   },
   COVER: {
     label: "Cover images", aspect: 16 / 9, aspectLabel: "16:9", minWidth: 960, minHeight: 540, maxWidth: 1600,

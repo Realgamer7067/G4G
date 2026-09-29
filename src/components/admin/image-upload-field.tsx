@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils/cn";
 export type UploadedImage = { id: string; url: string; alt: string };
 
 const PREVIEW_SHAPE: Record<ImagePurpose, string> = {
-  POSTER: "aspect-video",
+  POSTER: "aspect-[4/5] max-w-64",
   COVER: "aspect-video",
   GALLERY: "aspect-[4/3]",
   TEAM: "aspect-square max-w-48",
@@ -138,7 +138,7 @@ export function ImageUploadField({
           <img
             src={image.url}
             alt=""
-            className={cn("size-full", purpose === "LOGO" || purpose === "SPONSOR" ? "object-contain p-3" : "object-cover")}
+            className={cn("size-full", purpose === "LOGO" || purpose === "SPONSOR" ? "object-contain p-3" : purpose === "POSTER" ? "object-contain" : "object-cover")}
           />
         ) : (
           <span className="grid justify-items-center gap-1 p-4 text-center text-xs text-muted">

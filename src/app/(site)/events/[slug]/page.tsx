@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowUpRight, CalendarDays, CalendarPlus, Clock, Globe, Mail, MapPin, Phone, Users } from "lucide-react";
 import { Countdown } from "@/components/events/countdown";
 import { ShareButtons } from "@/components/events/share-buttons";
+import { PosterImage } from "@/components/events/poster-image";
 import { StatusPill } from "@/components/events/status-pill";
 import { Picture } from "@/components/media/picture";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -97,13 +98,18 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
         )}
 
         <header className="grid gap-8 lg:grid-cols-[1.25fr_1fr] lg:items-center">
-          <div className="hero-media-in group overflow-hidden rounded-[28px] border border-line bg-night shadow-[0_40px_80px_-40px_rgb(0_0_0/0.9)]">
+          {/* The frame follows the poster's own shape, clamped between 4:5 and 16:9 so it never dominates the page. */}
+          <div
+            className="hero-media-in group overflow-hidden rounded-[28px] border border-line bg-night shadow-[0_40px_80px_-40px_rgb(0_0_0/0.9)]"
+            style={event.poster ? { aspectRatio: String(Math.min(16 / 9, Math.max(4 / 5, event.poster.width / event.poster.height))) } : undefined}
+          >
             {event.poster ? (
-              <Picture
+              <PosterImage
                 image={event.poster}
                 sizes="(min-width: 1024px) 720px, 100vw"
                 priority
-                imgClassName="aspect-video size-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03] motion-reduce:transform-none"
+                className="size-full"
+                imgClassName="transition-transform duration-500 ease-out group-hover:scale-[1.03] motion-reduce:transform-none"
               />
             ) : (
               <div aria-hidden="true" className="aspect-video bg-[radial-gradient(circle_at_80%_20%,rgb(92_201_123/0.45),transparent_45%),radial-gradient(circle_at_10%_110%,rgb(47_141_70/0.5),transparent_50%)]" />

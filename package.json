@@ -21,7 +21,8 @@
     "db:studio": "prisma studio",
     "postinstall": "prisma generate",
     "test:e2e": "playwright test",
-    "seed:demo": "tsx --conditions=react-server scripts/seed-demo.mts"
+    "seed:demo": "tsx --conditions=react-server scripts/seed-demo.mts",
+    "import:legacy": "tsx --conditions=react-server scripts/import-legacy.mts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

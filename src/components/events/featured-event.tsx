@@ -2,12 +2,12 @@ import Link from "next/link";
 import { ArrowRight, CalendarDays, Globe, MapPin } from "lucide-react";
 import { Countdown } from "@/components/events/countdown";
 import { StatusPill } from "@/components/events/status-pill";
-import { Picture } from "@/components/media/picture";
 import { Reveal } from "@/components/motion/reveal";
 import { LinkButton } from "@/components/ui/link-button";
 import { statsOf, statusInputOf, type EventCardDTO } from "@/lib/data/events";
 import { formatEventWhen } from "@/lib/events/format";
 import { deriveEventStatus } from "@/lib/events/status";
+import { PosterImage } from "./poster-image";
 
 /** The large 7/5 event feature used by the homepage spotlight and the top of /events. */
 export function FeaturedEvent({
@@ -35,12 +35,12 @@ export function FeaturedEvent({
     <Wrapper className="group grid overflow-hidden rounded-[28px] border border-line bg-surface lg:grid-cols-[7fr_5fr]">
       <Link href={`/events/${event.slug}`} className="relative block aspect-[16/10] overflow-hidden bg-night lg:aspect-auto lg:min-h-[28rem]" tabIndex={-1} aria-hidden="true">
         {event.poster ? (
-          <Picture
+          <PosterImage
             image={event.poster}
             sizes="(min-width: 1024px) 720px, 100vw"
-            alt=""
             priority={priority}
-            imgClassName="absolute inset-0 size-full object-cover transition-transform duration-[350ms] ease-out group-hover:scale-[1.035] motion-reduce:transform-none"
+            className="absolute inset-0"
+            imgClassName="transition-transform duration-[350ms] ease-out group-hover:scale-[1.035] motion-reduce:transform-none"
           />
         ) : (
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_25%,rgb(92_201_123/0.45),transparent_50%),radial-gradient(circle_at_15%_100%,rgb(47_141_70/0.5),transparent_55%)]" />

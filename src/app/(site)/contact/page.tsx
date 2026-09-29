@@ -31,12 +31,12 @@ export default async function ContactPage() {
             {items.map(({ icon: Icon, label, value, href }) => {
               const body = (
                 <>
-                  <span className="grid size-11 place-items-center rounded-2xl bg-leaf/10 text-leaf">
+                  <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-leaf/10 text-leaf">
                     <Icon className="size-5" aria-hidden="true" />
                   </span>
                   <span className="grid min-w-0 gap-1">
                     <span className="text-sm text-muted">{label}</span>
-                    <span className="break-words font-display text-lg font-bold">{value}</span>
+                    <span className="font-display text-lg font-bold [overflow-wrap:anywhere]">{value}</span>
                   </span>
                   {href && <ArrowUpRight aria-hidden="true" className="ml-auto size-4 shrink-0 text-muted transition-[transform,color] duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-leaf" />}
                 </>

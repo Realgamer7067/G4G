@@ -18,6 +18,7 @@ export function Picture({
   sizes = "100vw",
   alt,
   priority = false,
+  placeholder = true,
   className,
   imgClassName,
 }: {
@@ -25,6 +26,8 @@ export function Picture({
   sizes?: string;
   alt?: string;
   priority?: boolean;
+  /** Blurred preview behind the image while it loads. Off when the image is letterboxed (object-contain), where it would show as a smear. */
+  placeholder?: boolean;
   className?: string;
   imgClassName?: string;
 }) {
@@ -58,7 +61,7 @@ export function Picture({
         decoding="async"
         className={imgClassName}
         style={
-          image.blurDataUrl
+          placeholder && image.blurDataUrl
             ? { backgroundImage: `url(${image.blurDataUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
             : undefined
         }

@@ -54,13 +54,11 @@ describe("validateDimensions", () => {
     expect(validateDimensions("POSTER", 1920, 1080)).toBeNull();
   });
   it("explains when a poster is too small", () => {
-    expect(validateDimensions("POSTER", 800, 450)).toBe("This image is 800 × 450. Posters need at least 960 × 540.");
+    expect(validateDimensions("POSTER", 800, 450)).toBe("This image is 800 × 450. Posters need a shortest side of at least 540px.");
   });
-  it("rejects the wrong aspect ratio", () => {
-    expect(validateDimensions("POSTER", 1920, 1200)).toBe("Posters must be 16:9. Crop the image before uploading.");
-  });
-  it("tolerates rounding from the crop tool", () => {
-    expect(validateDimensions("POSTER", 1001, 563)).toBeNull();
+  it("accepts square and portrait posters", () => {
+    expect(validateDimensions("POSTER", 1080, 1080)).toBeNull();
+    expect(validateDimensions("POSTER", 2480, 3508)).toBeNull();
   });
   it("checks square photos", () => {
     expect(validateDimensions("TEAM", 150, 150)).toBe("This image is 150 × 150. Team photos need at least 200 × 200.");
